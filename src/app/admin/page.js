@@ -11,10 +11,12 @@ export default function AdminPage() {
   const router = useRouter();
   const [user, setUser] = useState(null);
   const [loading, setLoading] = useState(true);
-  const [trips, setTrips] = useState([]);
   const [users, setUsers] = useState([]);
+  const [trips, setTrips] = useState([]);
+  const [userSearch, setUserSearch] = useState("");
+  const [tripSearch, setTripSearch] = useState("");
 
-  const ADMIN_EMAIL = "support@go-tribes.com"; // Change to your real admin email
+  const ADMIN_EMAIL = "admin@go-tribes.com"; // CHANGE TO YOUR REAL ADMIN EMAIL
 
   useEffect(() => {
     const unsubscribe = onAuthStateChanged(auth, (currentUser) => {
@@ -25,8 +27,7 @@ export default function AdminPage() {
         router.push("/login");
       } else {
         setUser(currentUser);
-        fetchTrips();
-        fetchUsers();
+        fetchData();
       }
       setLoading(false);
     });
@@ -34,36 +35,53 @@ export default function AdminPage() {
     return () => unsubscribe();
   }, [router]);
 
-  const fetchTrips = async () => {
+  const fetchData = async () => {
     try {
+      const usersCollection = collection(db, "users");
       const tripsCollection = collection(db, "trips");
-      const querySnapshot = await getDocs(tripsCollection);
-      const tripsData = querySnapshot.docs.map((doc) => ({
-        id: doc.id,
-        ...doc.data(),
-      }));
+
+      const [usersSnap, tripsSnap] = await Promise.all([
+        getDocs(usersCollection),
+        getDocs(tripsCollection),
+      ]);
+
+      const usersData = usersSnap.docs.map((doc) => ({ id: doc.id, ...doc.data() }));
+      const tripsData = tripsSnap.docs.map((doc) => ({ id: doc.id, ...doc.data() }));
+
+      setUsers(usersData);
       setTrips(tripsData);
     } catch (error) {
-      console.error("Error fetching trips:", error);
+      console.error("Error fetching data:", error);
     }
   };
 
-  const fetchUsers = async () => {
+  const handleDeleteUser = async (uid) => {
+    const confirmDelete = window.confirm("Are you sure you want to DELETE this user permanently?");
+    if (!confirmDelete) return;
+
     try {
-      const usersCollection = collection(db, "users");
-      const querySnapshot = await getDocs(usersCollection);
-      const usersData = querySnapshot.docs.map((doc) => ({
-        id: doc.id,
-        ...doc.data(),
-      }));
-      setUsers(usersData);
+      const response = await fetch("/api/admin/delete-user", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ uid }),
+      });
+
+      const data = await response.json();
+
+      if (response.ok) {
+        alert(data.message);
+        setUsers(users.filter((user) => user.uid !== uid));
+      } else {
+        alert(data.error || "Failed to delete user.");
+      }
     } catch (error) {
-      console.error("Error fetching users:", error);
+      console.error("Error deleting user:", error);
+      alert("Error deleting user.");
     }
   };
 
   const handleDeleteTrip = async (tripId) => {
-    const confirmDelete = window.confirm("Are you sure you want to delete this trip?");
+    const confirmDelete = window.confirm("Are you sure you want to DELETE this trip?");
     if (!confirmDelete) return;
 
     try {
@@ -95,15 +113,24 @@ export default function AdminPage() {
     );
   }
 
+  // Filtered Results
+  const filteredUsers = users.filter((u) =>
+    u.email.toLowerCase().includes(userSearch.toLowerCase())
+  );
+  const filteredTrips = trips.filter((t) =>
+    t.destination.toLowerCase().includes(tripSearch.toLowerCase())
+  );
+
   return (
     <>
       <Head>
         <title>Admin Dashboard - Go-Tribes</title>
-        <meta name="description" content="Admin Panel to manage users and trips for Go-Tribes." />
+        <meta name="description" content="Admin Dashboard to manage users and trips for Go-Tribes." />
       </Head>
 
       <main className="p-8 min-h-screen bg-gradient-to-br from-gray-100 via-white to-gray-200">
         <div className="max-w-7xl mx-auto">
+          {/* Top Bar */}
           <div className="flex justify-between items-center mb-10">
             <h1 className="text-4xl font-bold text-blue-700">Admin Dashboard</h1>
             <button
@@ -114,10 +141,32 @@ export default function AdminPage() {
             </button>
           </div>
 
-          {/* Users Section */}
+          {/* Analytics Cards */}
+          <div className="grid grid-cols-2 md:grid-cols-4 gap-6 mb-10">
+            <div className="bg-green-500 text-white p-6 rounded-lg shadow">
+              <h2 className="text-xl font-semibold">Total Users</h2>
+              <p className="text-3xl mt-2">{users.length}</p>
+            </div>
+            <div className="bg-blue-500 text-white p-6 rounded-lg shadow">
+              <h2 className="text-xl font-semibold">Total Trips</h2>
+              <p className="text-3xl mt-2">{trips.length}</p>
+            </div>
+          </div>
+
+          {/* User Management */}
           <section className="mb-12">
-            <h2 className="text-2xl font-semibold mb-6 text-green-700">Registered Users</h2>
-            {users.length === 0 ? (
+            <div className="flex justify-between items-center mb-4">
+              <h2 className="text-2xl font-semibold text-green-700">Registered Users</h2>
+              <input
+                type="text"
+                placeholder="Search users..."
+                className="p-2 border rounded"
+                value={userSearch}
+                onChange={(e) => setUserSearch(e.target.value)}
+              />
+            </div>
+
+            {filteredUsers.length === 0 ? (
               <p className="text-gray-600">No users found.</p>
             ) : (
               <div className="overflow-x-auto">
@@ -128,15 +177,24 @@ export default function AdminPage() {
                       <th className="p-3">Email</th>
                       <th className="p-3">Email Verified</th>
                       <th className="p-3">Registered At</th>
+                      <th className="p-3">Action</th>
                     </tr>
                   </thead>
                   <tbody>
-                    {users.map((user) => (
+                    {filteredUsers.map((user) => (
                       <tr key={user.id} className="border-t">
                         <td className="p-3">{user.uid}</td>
                         <td className="p-3">{user.email}</td>
-                        <td className="p-3">{user.emailVerified ? "✅ Yes" : "❌ No"}</td>
+                        <td className="p-3">{user.emailVerified ? "✅" : "❌"}</td>
                         <td className="p-3">{user.createdAt?.toDate().toLocaleDateString()}</td>
+                        <td className="p-3">
+                          <button
+                            onClick={() => handleDeleteUser(user.uid)}
+                            className="px-3 py-1 bg-red-500 text-white rounded hover:bg-red-600 text-sm"
+                          >
+                            Delete
+                          </button>
+                        </td>
                       </tr>
                     ))}
                   </tbody>
@@ -145,10 +203,20 @@ export default function AdminPage() {
             )}
           </section>
 
-          {/* Trips Section */}
+          {/* Trip Management */}
           <section>
-            <h2 className="text-2xl font-semibold mb-6 text-blue-700">All Trips</h2>
-            {trips.length === 0 ? (
+            <div className="flex justify-between items-center mb-4">
+              <h2 className="text-2xl font-semibold text-blue-700">All Trips</h2>
+              <input
+                type="text"
+                placeholder="Search trips..."
+                className="p-2 border rounded"
+                value={tripSearch}
+                onChange={(e) => setTripSearch(e.target.value)}
+              />
+            </div>
+
+            {filteredTrips.length === 0 ? (
               <p className="text-gray-600">No trips found.</p>
             ) : (
               <div className="overflow-x-auto">
@@ -165,7 +233,7 @@ export default function AdminPage() {
                     </tr>
                   </thead>
                   <tbody>
-                    {trips.map((trip) => (
+                    {filteredTrips.map((trip) => (
                       <tr key={trip.id} className="border-t">
                         <td className="p-3">{trip.id}</td>
                         <td className="p-3">{trip.destination}</td>
