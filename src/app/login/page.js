@@ -15,7 +15,7 @@ export default function LoginPage() {
     try {
       await signInWithEmailAndPassword(auth, email, password);
       alert("Login Successful!");
-      router.push("/trip-planner"); // Go to Trip Planner after login
+      router.push("/trip-planner"); // Redirect to Trip Planner after login
     } catch (error) {
       console.error(error);
       alert("Login Failed: " + error.message);
@@ -51,9 +51,9 @@ export default function LoginPage() {
         </button>
       </form>
 
-      {/* Add Register link here */}
+      {/* Register link */}
       <div className="mt-6 text-gray-700">
-        Don't have an account?{" "}
+        Don&apos;t have an account?{" "}
         <button
           onClick={() => router.push("/register")}
           className="text-blue-600 underline hover:text-blue-800"
