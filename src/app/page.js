@@ -14,8 +14,8 @@ export default function HomePage() {
         {/* Open Graph (OG) Tags */}
         <meta property="og:title" content="Go-Tribes | Plan Your Perfect Adventures" />
         <meta property="og:description" content="Create personalized travel plans, save trips, and explore the world with Go-Tribes!" />
-        <meta property="og:image" content="https://go-tribes.com/og-image.jpg" />
-        <meta property="og:url" content="https://go-tribes.com" />
+        <meta property="og:image" content="https://go-tribes.com/og-image.jpg?v=2" />
+        <meta property="og:url" content="https://go-tribes.com?v=2" />
         <meta property="og:type" content="website" />
 
         {/* Twitter Card Tags (optional but recommended) */}
