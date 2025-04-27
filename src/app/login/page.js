@@ -15,7 +15,7 @@ export default function LoginPage() {
     try {
       await signInWithEmailAndPassword(auth, email, password);
       alert("Login Successful!");
-      router.push("/view-trips"); // After login, go to View Trips
+      router.push("/trip-planner"); // Go to Trip Planner after login
     } catch (error) {
       console.error(error);
       alert("Login Failed: " + error.message);
@@ -25,6 +25,7 @@ export default function LoginPage() {
   return (
     <main className="flex flex-col items-center justify-center min-h-screen p-8 bg-gray-100">
       <h1 className="text-4xl font-bold mb-8">Login</h1>
+
       <form onSubmit={handleLogin} className="flex flex-col space-y-4 w-full max-w-md">
         <input
           type="email"
@@ -42,10 +43,24 @@ export default function LoginPage() {
           onChange={(e) => setPassword(e.target.value)}
           required
         />
-        <button type="submit" className="px-6 py-3 bg-blue-600 text-white rounded hover:bg-blue-700">
+        <button
+          type="submit"
+          className="px-6 py-3 bg-blue-600 text-white rounded hover:bg-blue-700"
+        >
           Login
         </button>
       </form>
+
+      {/* Add Register link here */}
+      <div className="mt-6 text-gray-700">
+        Don't have an account?{" "}
+        <button
+          onClick={() => router.push("/register")}
+          className="text-blue-600 underline hover:text-blue-800"
+        >
+          Register here
+        </button>
+      </div>
     </main>
   );
 }
