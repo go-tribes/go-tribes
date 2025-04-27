@@ -14,7 +14,7 @@ export default function AdminPage() {
   const [trips, setTrips] = useState([]);
   const [users, setUsers] = useState([]);
 
-  const ADMIN_EMAIL = "admin@go-tribes.com"; // Change to your real admin email
+  const ADMIN_EMAIL = "support@go-tribes.com"; // Change to your real admin email
 
   useEffect(() => {
     const unsubscribe = onAuthStateChanged(auth, (currentUser) => {
