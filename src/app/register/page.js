@@ -2,7 +2,7 @@
 
 import { useState } from "react";
 import { auth } from "../../../firebase";
-import { createUserWithEmailAndPassword } from "firebase/auth";
+import { createUserWithEmailAndPassword, sendEmailVerification } from "firebase/auth";
 import { useRouter } from "next/navigation";
 import Head from "next/head";
 
@@ -14,9 +14,14 @@ export default function RegisterPage() {
   const handleRegister = async (e) => {
     e.preventDefault();
     try {
-      await createUserWithEmailAndPassword(auth, email, password);
-      alert("Registration Successful!");
-      router.push("/trip-planner");
+      const userCredential = await createUserWithEmailAndPassword(auth, email, password);
+      const user = userCredential.user;
+
+      // Send Email Verification
+      await sendEmailVerification(user);
+
+      alert("Registration successful! Please check your email to verify your account.");
+      router.push("/login");
     } catch (error) {
       console.error(error);
       alert("Registration Failed: " + error.message);
