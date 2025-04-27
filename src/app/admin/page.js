@@ -2,7 +2,7 @@
 
 import { useState, useEffect } from "react";
 import { auth, db } from "../../../firebase";
-import { onAuthStateChanged } from "firebase/auth";
+import { onAuthStateChanged, signOut } from "firebase/auth";
 import { collection, getDocs, deleteDoc, doc } from "firebase/firestore";
 import { useRouter } from "next/navigation";
 import Head from "next/head";
@@ -13,15 +13,15 @@ export default function AdminPage() {
   const [loading, setLoading] = useState(true);
   const [trips, setTrips] = useState([]);
 
-  const ADMIN_EMAIL = "support@go-tribes.com"; // Change to your actual Admin email
+  const ADMIN_EMAIL = "admin@go-tribes.com"; // <-- Change this to your real admin email
 
   useEffect(() => {
     const unsubscribe = onAuthStateChanged(auth, (currentUser) => {
       if (!currentUser) {
-        router.push("/login"); // Not logged in ➔ Redirect to login
+        router.push("/login");
       } else if (currentUser.email !== ADMIN_EMAIL) {
         alert("Access denied. Admins only!");
-        router.push("/login"); // Not admin ➔ Redirect to login
+        router.push("/login");
       } else {
         setUser(currentUser);
         fetchTrips();
@@ -60,6 +60,17 @@ export default function AdminPage() {
     }
   };
 
+  const handleLogout = async () => {
+    try {
+      await signOut(auth);
+      alert("Logged out successfully!");
+      router.push("/login");
+    } catch (error) {
+      console.error("Error logging out:", error);
+      alert("Failed to logout.");
+    }
+  };
+
   if (loading) {
     return (
       <main className="flex justify-center items-center min-h-screen bg-gray-100">
@@ -77,7 +88,15 @@ export default function AdminPage() {
 
       <main className="p-8 min-h-screen bg-gradient-to-br from-gray-100 via-white to-gray-200">
         <div className="max-w-7xl mx-auto">
-          <h1 className="text-4xl font-bold mb-10 text-center text-blue-700">Admin Dashboard</h1>
+          <div className="flex justify-between items-center mb-10">
+            <h1 className="text-4xl font-bold text-blue-700">Admin Dashboard</h1>
+            <button
+              onClick={handleLogout}
+              className="px-5 py-2 bg-red-500 text-white rounded-lg hover:bg-red-600 transition"
+            >
+              Logout
+            </button>
+          </div>
 
           {/* Trips Section */}
           <section>
