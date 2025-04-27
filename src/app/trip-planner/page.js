@@ -6,6 +6,7 @@ import { collection, addDoc } from "firebase/firestore";
 import { onAuthStateChanged, signOut } from "firebase/auth";
 import { useRouter } from "next/navigation";
 import toast, { Toaster } from "react-hot-toast";
+import Head from "next/head";
 
 export default function TripPlanner() {
   const router = useRouter();
@@ -25,11 +26,10 @@ export default function TripPlanner() {
     });
 
     return () => unsubscribe();
-  }, []);
+  }, [router]);
 
   const handleSubmit = async (e) => {
     e.preventDefault();
-
     try {
       const user = auth.currentUser;
       if (!user) {
@@ -42,19 +42,18 @@ export default function TripPlanner() {
         startDate,
         endDate,
         notes,
-        userId: user.uid, // Save user ID here!
+        userId: user.uid,
         createdAt: new Date(),
       });
 
-      toast.success("Trip saved successfully! 🎉");
-
+      toast.success("Trip saved successfully!");
       setDestination("");
       setStartDate("");
       setEndDate("");
       setNotes("");
     } catch (error) {
       console.error("Error saving trip:", error);
-      toast.error("Failed to save trip 😢");
+      toast.error("Failed to save trip.");
     }
   };
 
@@ -79,63 +78,70 @@ export default function TripPlanner() {
   }
 
   return (
-    <main className="flex min-h-screen flex-col items-center justify-center p-8 bg-gradient-to-br from-green-100 via-white to-blue-100">
-      <Toaster position="bottom-right" />
+    <>
+      <Head>
+        <title>Plan Your Next Adventure | Go-Tribes</title>
+        <meta name="description" content="Personalize and plan your dream trips with Go-Tribes." />
+      </Head>
 
-      <div className="flex justify-between w-full max-w-4xl mb-8">
-        <h1 className="text-4xl font-bold text-green-700">Plan Your Trip ✈️</h1>
-        <div className="flex space-x-4">
-          <button
-            onClick={() => router.push("/view-trips")}
-            className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition"
-          >
-            View Saved Trips
-          </button>
-          <button
-            onClick={handleLogout}
-            className="px-4 py-2 bg-red-500 text-white rounded-lg hover:bg-red-600 transition"
-          >
-            Logout
-          </button>
+      <main className="flex min-h-screen flex-col items-center justify-center p-8 bg-gradient-to-br from-green-100 via-white to-blue-100">
+        <Toaster position="bottom-right" />
+
+        <div className="flex justify-between w-full max-w-4xl mb-8">
+          <h1 className="text-4xl font-bold text-green-700">Plan Your Trip ✈️</h1>
+          <div className="flex space-x-4">
+            <button
+              onClick={() => router.push("/view-trips")}
+              className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition"
+            >
+              View Saved Trips
+            </button>
+            <button
+              onClick={handleLogout}
+              className="px-4 py-2 bg-red-500 text-white rounded-lg hover:bg-red-600 transition"
+            >
+              Logout
+            </button>
+          </div>
         </div>
-      </div>
 
-      <form onSubmit={handleSubmit} className="flex flex-col space-y-4 w-full max-w-md">
-        <input
-          type="text"
-          placeholder="Destination"
-          className="p-3 border rounded"
-          value={destination}
-          onChange={(e) => setDestination(e.target.value)}
-          required
-        />
-        <input
-          type="date"
-          className="p-3 border rounded"
-          value={startDate}
-          onChange={(e) => setStartDate(e.target.value)}
-          required
-        />
-        <input
-          type="date"
-          className="p-3 border rounded"
-          value={endDate}
-          onChange={(e) => setEndDate(e.target.value)}
-          required
-        />
-        <textarea
-          placeholder="Notes about your trip..."
-          className="p-3 border rounded h-32"
-          value={notes}
-          onChange={(e) => setNotes(e.target.value)}
-        />
-        <button
-          type="submit"
-          className="px-6 py-3 bg-green-600 text-white rounded-lg hover:bg-green-700 transition"
-        >
-          Save Trip
-        </button>
-      </form>
-    </main>
+        <form onSubmit={handleSubmit} className="flex flex-col space-y-4 w-full max-w-md">
+          <input
+            type="text"
+            placeholder="Destination"
+            className="p-3 border rounded"
+            value={destination}
+            onChange={(e) => setDestination(e.target.value)}
+            required
+          />
+          <input
+            type="date"
+            className="p-3 border rounded"
+            value={startDate}
+            onChange={(e) => setStartDate(e.target.value)}
+            required
+          />
+          <input
+            type="date"
+            className="p-3 border rounded"
+            value={endDate}
+            onChange={(e) => setEndDate(e.target.value)}
+            required
+          />
+          <textarea
+            placeholder="Notes about your trip..."
+            className="p-3 border rounded h-32"
+            value={notes}
+            onChange={(e) => setNotes(e.target.value)}
+          />
+          <button
+            type="submit"
+            className="px-6 py-3 bg-green-600 text-white rounded-lg hover:bg-green-700 transition"
+          >
+            Save Trip
+          </button>
+        </form>
+      </main>
+    </>
   );
 }

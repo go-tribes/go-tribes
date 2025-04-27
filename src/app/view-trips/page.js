@@ -6,6 +6,7 @@ import { signOut, onAuthStateChanged } from "firebase/auth";
 import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 import toast, { Toaster } from "react-hot-toast";
+import Head from "next/head";
 
 export default function ViewTrips() {
   const router = useRouter();
@@ -24,7 +25,7 @@ export default function ViewTrips() {
     });
 
     return () => unsubscribe();
-  }, []);
+  }, [router]);
 
   const fetchTrips = async (userId) => {
     try {
@@ -112,47 +113,54 @@ export default function ViewTrips() {
   }
 
   return (
-    <main className="p-8 min-h-screen bg-gradient-to-br from-blue-100 via-white to-green-100">
-      <Toaster position="bottom-right" />
+    <>
+      <Head>
+        <title>My Saved Trips | Go-Tribes</title>
+        <meta name="description" content="View, manage, and organize all your saved trips with Go-Tribes." />
+      </Head>
 
-      <div className="flex justify-between items-center mb-8">
-        <h1 className="text-4xl font-bold text-blue-700">My Saved Trips 🌏</h1>
-        <div className="flex space-x-4">
-          <button
-            onClick={() => router.push("/trip-planner")}
-            className="px-4 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 transition"
-          >
-            Plan New Trip
-          </button>
-          <button
-            onClick={handleLogout}
-            className="px-4 py-2 bg-red-500 text-white rounded-lg hover:bg-red-600 transition"
-          >
-            Logout
-          </button>
-        </div>
-      </div>
+      <main className="p-8 min-h-screen bg-gradient-to-br from-blue-100 via-white to-green-100">
+        <Toaster position="bottom-right" />
 
-      {trips.length === 0 ? (
-        <p className="text-gray-600 text-center mt-8">No trips saved yet. Plan your first trip!</p>
-      ) : (
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
-          {trips.map((trip) => (
-            <div key={trip.id} className="bg-white rounded-lg shadow-lg p-6 relative">
-              <h2 className="text-2xl font-bold mb-2">{trip.destination}</h2>
-              <p className="text-gray-600 mb-1"><strong>Start:</strong> {trip.startDate}</p>
-              <p className="text-gray-600 mb-1"><strong>End:</strong> {trip.endDate}</p>
-              <p className="text-gray-600 mb-4"><strong>Notes:</strong> {trip.notes}</p>
-              <button
-                onClick={() => handleDelete(trip.id)}
-                className="absolute top-2 right-2 text-sm px-3 py-1 bg-red-500 text-white rounded-full hover:bg-red-600"
-              >
-                Delete
-              </button>
-            </div>
-          ))}
+        <div className="flex justify-between items-center mb-8">
+          <h1 className="text-4xl font-bold text-blue-700">My Saved Trips 🌏</h1>
+          <div className="flex space-x-4">
+            <button
+              onClick={() => router.push("/trip-planner")}
+              className="px-4 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 transition"
+            >
+              Plan New Trip
+            </button>
+            <button
+              onClick={handleLogout}
+              className="px-4 py-2 bg-red-500 text-white rounded-lg hover:bg-red-600 transition"
+            >
+              Logout
+            </button>
+          </div>
         </div>
-      )}
-    </main>
+
+        {trips.length === 0 ? (
+          <p className="text-gray-600 text-center mt-8">No trips saved yet. Plan your first trip!</p>
+        ) : (
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
+            {trips.map((trip) => (
+              <div key={trip.id} className="bg-white rounded-lg shadow-lg p-6 relative">
+                <h2 className="text-2xl font-bold mb-2">{trip.destination}</h2>
+                <p className="text-gray-600 mb-1"><strong>Start:</strong> {trip.startDate}</p>
+                <p className="text-gray-600 mb-1"><strong>End:</strong> {trip.endDate}</p>
+                <p className="text-gray-600 mb-4"><strong>Notes:</strong> {trip.notes}</p>
+                <button
+                  onClick={() => handleDelete(trip.id)}
+                  className="absolute top-2 right-2 text-sm px-3 py-1 bg-red-500 text-white rounded-full hover:bg-red-600"
+                >
+                  Delete
+                </button>
+              </div>
+            ))}
+          </div>
+        )}
+      </main>
+    </>
   );
 }
