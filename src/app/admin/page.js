@@ -1,28 +1,36 @@
 "use client";
 
 import { useState, useEffect } from "react";
-import { db } from "../../../firebase";
+import { auth, db } from "../../../firebase";
+import { onAuthStateChanged } from "firebase/auth";
 import { collection, getDocs, deleteDoc, doc } from "firebase/firestore";
 import { useRouter } from "next/navigation";
 import Head from "next/head";
 
 export default function AdminPage() {
   const router = useRouter();
-  const [password, setPassword] = useState("");
-  const [authenticated, setAuthenticated] = useState(false);
+  const [user, setUser] = useState(null);
+  const [loading, setLoading] = useState(true);
   const [trips, setTrips] = useState([]);
 
-  const adminPassword = "gotribesadmin"; // Admin password
+  const ADMIN_EMAIL = "support@go-tribes.com"; // Change to your actual Admin email
 
-  const handlePasswordSubmit = (e) => {
-    e.preventDefault();
-    if (password === adminPassword) {
-      setAuthenticated(true);
-      fetchTrips();
-    } else {
-      alert("Incorrect Password");
-    }
-  };
+  useEffect(() => {
+    const unsubscribe = onAuthStateChanged(auth, (currentUser) => {
+      if (!currentUser) {
+        router.push("/login"); // Not logged in ➔ Redirect to login
+      } else if (currentUser.email !== ADMIN_EMAIL) {
+        alert("Access denied. Admins only!");
+        router.push("/login"); // Not admin ➔ Redirect to login
+      } else {
+        setUser(currentUser);
+        fetchTrips();
+      }
+      setLoading(false);
+    });
+
+    return () => unsubscribe();
+  }, [router]);
 
   const fetchTrips = async () => {
     try {
@@ -52,81 +60,69 @@ export default function AdminPage() {
     }
   };
 
+  if (loading) {
+    return (
+      <main className="flex justify-center items-center min-h-screen bg-gray-100">
+        <p className="text-xl font-semibold text-gray-600">Checking authentication...</p>
+      </main>
+    );
+  }
+
   return (
     <>
       <Head>
         <title>Admin Dashboard - Go-Tribes</title>
-        <meta name="description" content="Admin panel to monitor trips for Go-Tribes." />
+        <meta name="description" content="Full Admin Panel to monitor trips for Go-Tribes." />
       </Head>
 
       <main className="p-8 min-h-screen bg-gradient-to-br from-gray-100 via-white to-gray-200">
-        {!authenticated ? (
-          <form onSubmit={handlePasswordSubmit} className="flex flex-col space-y-4 max-w-md mx-auto">
-            <h1 className="text-3xl font-bold mb-6 text-center">Admin Login</h1>
-            <input
-              type="password"
-              placeholder="Enter Admin Password"
-              className="p-3 border rounded"
-              value={password}
-              onChange={(e) => setPassword(e.target.value)}
-              required
-            />
-            <button
-              type="submit"
-              className="px-6 py-3 bg-blue-600 text-white rounded hover:bg-blue-700"
-            >
-              Access Dashboard
-            </button>
-          </form>
-        ) : (
-          <div className="max-w-7xl mx-auto">
-            <h1 className="text-4xl font-bold mb-10 text-center text-blue-700">Admin Dashboard</h1>
+        <div className="max-w-7xl mx-auto">
+          <h1 className="text-4xl font-bold mb-10 text-center text-blue-700">Admin Dashboard</h1>
 
-            {/* Trips Section */}
-            <section>
-              <h2 className="text-2xl font-semibold mb-6 text-blue-700">All Trips</h2>
-              {trips.length === 0 ? (
-                <p className="text-gray-600">No trips found.</p>
-              ) : (
-                <div className="overflow-x-auto">
-                  <table className="min-w-full bg-white rounded shadow overflow-hidden">
-                    <thead>
-                      <tr className="bg-blue-200 text-left">
-                        <th className="p-3">Trip ID</th>
-                        <th className="p-3">Destination</th>
-                        <th className="p-3">Start Date</th>
-                        <th className="p-3">End Date</th>
-                        <th className="p-3">Notes</th>
-                        <th className="p-3">User ID</th>
-                        <th className="p-3">Action</th>
+          {/* Trips Section */}
+          <section>
+            <h2 className="text-2xl font-semibold mb-6 text-blue-700">All Trips</h2>
+            {trips.length === 0 ? (
+              <p className="text-gray-600">No trips found.</p>
+            ) : (
+              <div className="overflow-x-auto">
+                <table className="min-w-full bg-white rounded shadow overflow-hidden">
+                  <thead>
+                    <tr className="bg-blue-200 text-left">
+                      <th className="p-3">Trip ID</th>
+                      <th className="p-3">Destination</th>
+                      <th className="p-3">Start Date</th>
+                      <th className="p-3">End Date</th>
+                      <th className="p-3">Notes</th>
+                      <th className="p-3">User ID</th>
+                      <th className="p-3">Action</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {trips.map((trip) => (
+                      <tr key={trip.id} className="border-t">
+                        <td className="p-3">{trip.id}</td>
+                        <td className="p-3">{trip.destination}</td>
+                        <td className="p-3">{trip.startDate}</td>
+                        <td className="p-3">{trip.endDate}</td>
+                        <td className="p-3">{trip.notes}</td>
+                        <td className="p-3">{trip.userId}</td>
+                        <td className="p-3">
+                          <button
+                            onClick={() => handleDeleteTrip(trip.id)}
+                            className="px-3 py-1 bg-red-500 text-white rounded hover:bg-red-600 text-sm"
+                          >
+                            Delete
+                          </button>
+                        </td>
                       </tr>
-                    </thead>
-                    <tbody>
-                      {trips.map((trip) => (
-                        <tr key={trip.id} className="border-t">
-                          <td className="p-3">{trip.id}</td>
-                          <td className="p-3">{trip.destination}</td>
-                          <td className="p-3">{trip.startDate}</td>
-                          <td className="p-3">{trip.endDate}</td>
-                          <td className="p-3">{trip.notes}</td>
-                          <td className="p-3">{trip.userId}</td>
-                          <td className="p-3">
-                            <button
-                              onClick={() => handleDeleteTrip(trip.id)}
-                              className="px-3 py-1 bg-red-500 text-white rounded hover:bg-red-600 text-sm"
-                            >
-                              Delete
-                            </button>
-                          </td>
-                        </tr>
-                      ))}
-                    </tbody>
-                  </table>
-                </div>
-              )}
-            </section>
-          </div>
-        )}
+                    ))}
+                  </tbody>
+                </table>
+              </div>
+            )}
+          </section>
+        </div>
       </main>
     </>
   );
