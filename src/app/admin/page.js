@@ -12,8 +12,9 @@ export default function AdminPage() {
   const [user, setUser] = useState(null);
   const [loading, setLoading] = useState(true);
   const [trips, setTrips] = useState([]);
+  const [users, setUsers] = useState([]);
 
-  const ADMIN_EMAIL = "support@go-tribes.com"; // <-- Change this to your real admin email
+  const ADMIN_EMAIL = "admin@go-tribes.com"; // Change to your real admin email
 
   useEffect(() => {
     const unsubscribe = onAuthStateChanged(auth, (currentUser) => {
@@ -25,6 +26,7 @@ export default function AdminPage() {
       } else {
         setUser(currentUser);
         fetchTrips();
+        fetchUsers();
       }
       setLoading(false);
     });
@@ -43,6 +45,20 @@ export default function AdminPage() {
       setTrips(tripsData);
     } catch (error) {
       console.error("Error fetching trips:", error);
+    }
+  };
+
+  const fetchUsers = async () => {
+    try {
+      const usersCollection = collection(db, "users");
+      const querySnapshot = await getDocs(usersCollection);
+      const usersData = querySnapshot.docs.map((doc) => ({
+        id: doc.id,
+        ...doc.data(),
+      }));
+      setUsers(usersData);
+    } catch (error) {
+      console.error("Error fetching users:", error);
     }
   };
 
@@ -83,7 +99,7 @@ export default function AdminPage() {
     <>
       <Head>
         <title>Admin Dashboard - Go-Tribes</title>
-        <meta name="description" content="Full Admin Panel to monitor trips for Go-Tribes." />
+        <meta name="description" content="Admin Panel to manage users and trips for Go-Tribes." />
       </Head>
 
       <main className="p-8 min-h-screen bg-gradient-to-br from-gray-100 via-white to-gray-200">
@@ -97,6 +113,37 @@ export default function AdminPage() {
               Logout
             </button>
           </div>
+
+          {/* Users Section */}
+          <section className="mb-12">
+            <h2 className="text-2xl font-semibold mb-6 text-green-700">Registered Users</h2>
+            {users.length === 0 ? (
+              <p className="text-gray-600">No users found.</p>
+            ) : (
+              <div className="overflow-x-auto">
+                <table className="min-w-full bg-white rounded shadow overflow-hidden">
+                  <thead>
+                    <tr className="bg-green-200 text-left">
+                      <th className="p-3">User ID</th>
+                      <th className="p-3">Email</th>
+                      <th className="p-3">Email Verified</th>
+                      <th className="p-3">Registered At</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {users.map((user) => (
+                      <tr key={user.id} className="border-t">
+                        <td className="p-3">{user.uid}</td>
+                        <td className="p-3">{user.email}</td>
+                        <td className="p-3">{user.emailVerified ? "✅ Yes" : "❌ No"}</td>
+                        <td className="p-3">{user.createdAt?.toDate().toLocaleDateString()}</td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+              </div>
+            )}
+          </section>
 
           {/* Trips Section */}
           <section>

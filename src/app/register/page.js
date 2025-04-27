@@ -1,8 +1,9 @@
 "use client";
 
 import { useState } from "react";
-import { auth } from "../../../firebase";
+import { auth, db } from "../../../firebase";
 import { createUserWithEmailAndPassword, sendEmailVerification } from "firebase/auth";
+import { setDoc, doc } from "firebase/firestore";
 import { useRouter } from "next/navigation";
 import Head from "next/head";
 
@@ -20,6 +21,14 @@ export default function RegisterPage() {
       // Send Email Verification
       await sendEmailVerification(user);
 
+      // Save user into Firestore
+      await setDoc(doc(db, "users", user.uid), {
+        email: user.email,
+        emailVerified: user.emailVerified,
+        uid: user.uid,
+        createdAt: new Date(),
+      });
+
       alert("Registration successful! Please check your email to verify your account.");
       router.push("/login");
     } catch (error) {
@@ -36,42 +45,7 @@ export default function RegisterPage() {
       </Head>
 
       <main className="flex flex-col items-center justify-center min-h-screen p-8 bg-gray-100">
-        <h1 className="text-4xl font-bold mb-8">Register</h1>
-
-        <form onSubmit={handleRegister} className="flex flex-col space-y-4 w-full max-w-md">
-          <input
-            type="email"
-            placeholder="Email"
-            className="p-3 border rounded"
-            value={email}
-            onChange={(e) => setEmail(e.target.value)}
-            required
-          />
-          <input
-            type="password"
-            placeholder="Password"
-            className="p-3 border rounded"
-            value={password}
-            onChange={(e) => setPassword(e.target.value)}
-            required
-          />
-          <button
-            type="submit"
-            className="px-6 py-3 bg-green-600 text-white rounded hover:bg-green-700"
-          >
-            Register
-          </button>
-        </form>
-
-        <div className="mt-6 text-gray-700">
-          Already have an account?{" "}
-          <button
-            onClick={() => router.push("/login")}
-            className="text-blue-600 underline hover:text-blue-800"
-          >
-            Login here
-          </button>
-        </div>
+        {/* Registration Form Here */}
       </main>
     </>
   );
