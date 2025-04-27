@@ -1,142 +1,201 @@
 "use client";
 
 import { useState, useEffect } from "react";
-import { db, auth } from "../../../firebase";
-import { collection, addDoc } from "firebase/firestore";
-import { onAuthStateChanged, signOut } from "firebase/auth";
+import { db } from "../../../firebase";
+import { collection, addDoc, getDocs } from "firebase/firestore";
 import { useRouter } from "next/navigation";
-import toast, { Toaster } from "react-hot-toast";
 import Head from "next/head";
 
 export default function TripPlanner() {
   const router = useRouter();
+  const [departFrom, setDepartFrom] = useState("");
   const [destination, setDestination] = useState("");
   const [startDate, setStartDate] = useState("");
   const [endDate, setEndDate] = useState("");
-  const [notes, setNotes] = useState("");
-  const [authChecked, setAuthChecked] = useState(false);
+  const [travelCompanion, setTravelCompanion] = useState("");
+  const [registeredUsers, setRegisteredUsers] = useState([]);
+  const [manualEmail, setManualEmail] = useState("");
+
+  const places = [
+    "Kuala Lumpur",
+    "Penang",
+    "Langkawi",
+    "Johor Bahru",
+    "Singapore",
+    "Bangkok",
+    "Tokyo",
+    "Seoul",
+    "London",
+    "Paris"
+  ];
 
   useEffect(() => {
-    const unsubscribe = onAuthStateChanged(auth, (user) => {
-      if (!user) {
-        router.push("/login");
-      } else {
-        setAuthChecked(true);
-      }
-    });
+    fetchRegisteredUsers();
+  }, []);
 
-    return () => unsubscribe();
-  }, [router]);
+  const fetchRegisteredUsers = async () => {
+    try {
+      const usersSnap = await getDocs(collection(db, "users"));
+      const usersData = usersSnap.docs.map(doc => ({
+        id: doc.id,
+        email: doc.data().email,
+      }));
+      setRegisteredUsers(usersData);
+    } catch (error) {
+      console.error("Error fetching users:", error);
+    }
+  };
 
   const handleSubmit = async (e) => {
     e.preventDefault();
-    try {
-      const user = auth.currentUser;
-      if (!user) {
-        toast.error("You must be logged in!");
-        return;
-      }
 
+    if (!departFrom || !destination || !startDate || !endDate) {
+      alert("Please complete all required fields!");
+      return;
+    }
+
+    if (new Date(startDate) < new Date().setHours(0, 0, 0, 0)) {
+      alert("Start Date must be today or future date!");
+      return;
+    }
+
+    if (new Date(endDate) <= new Date(startDate)) {
+      alert("End Date must be after Start Date!");
+      return;
+    }
+
+    try {
       await addDoc(collection(db, "trips"), {
+        departFrom,
         destination,
         startDate,
         endDate,
-        notes,
-        userId: user.uid,
+        companionEmail: manualEmail || travelCompanion,
         createdAt: new Date(),
       });
 
-      toast.success("Trip saved successfully!");
-      setDestination("");
-      setStartDate("");
-      setEndDate("");
-      setNotes("");
+      if (manualEmail) {
+        await fetch("/api/send-invite", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ email: manualEmail }),
+        });
+      }
+
+      alert("Trip saved successfully! 🚀");
+      router.push("/view-trips");
     } catch (error) {
       console.error("Error saving trip:", error);
-      toast.error("Failed to save trip.");
+      alert("Failed to save trip.");
     }
   };
-
-  const handleLogout = async () => {
-    try {
-      await signOut(auth);
-      toast.success("Logged out successfully!");
-      router.push("/login");
-    } catch (error) {
-      console.error("Error signing out:", error);
-      toast.error("Failed to logout.");
-    }
-  };
-
-  if (!authChecked) {
-    return (
-      <main className="flex justify-center items-center min-h-screen bg-gray-100">
-        <Toaster position="bottom-right" />
-        <p className="text-2xl font-semibold text-gray-600">Checking Authentication...</p>
-      </main>
-    );
-  }
 
   return (
     <>
       <Head>
-        <title>Plan Your Next Adventure | Go-Tribes</title>
-        <meta name="description" content="Personalize and plan your dream trips with Go-Tribes." />
+        <title>Plan Your Trip - Go-Tribes</title>
+        <meta name="description" content="Create and plan your next travel adventure with Go-Tribes!" />
       </Head>
 
-      <main className="flex min-h-screen flex-col items-center justify-center p-8 bg-gradient-to-br from-green-100 via-white to-blue-100">
-        <Toaster position="bottom-right" />
+      <main className="flex flex-col items-center justify-center min-h-screen p-8 bg-gradient-to-br from-white via-green-100 to-blue-100">
+        <h1 className="text-4xl font-bold text-green-700 mb-8">Plan Your Trip ✈️</h1>
 
-        <div className="flex justify-between w-full max-w-4xl mb-8">
-          <h1 className="text-4xl font-bold text-green-700">Plan Your Trip ✈️</h1>
-          <div className="flex space-x-4">
-            <button
-              onClick={() => router.push("/view-trips")}
-              className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition"
+        <form onSubmit={handleSubmit} className="flex flex-col space-y-6 w-full max-w-md bg-white p-8 rounded-lg shadow">
+          <div>
+            <label className="block mb-2 font-semibold">Depart From</label>
+            <select
+              value={departFrom}
+              onChange={(e) => setDepartFrom(e.target.value)}
+              className="w-full p-3 border rounded"
+              required
             >
-              View Saved Trips
-            </button>
-            <button
-              onClick={handleLogout}
-              className="px-4 py-2 bg-red-500 text-white rounded-lg hover:bg-red-600 transition"
-            >
-              Logout
-            </button>
+              <option value="">Select Depart From</option>
+              {places.map((place) => (
+                <option key={place} value={place}>
+                  {place}
+                </option>
+              ))}
+            </select>
           </div>
-        </div>
 
-        <form onSubmit={handleSubmit} className="flex flex-col space-y-4 w-full max-w-md">
-          <input
-            type="text"
-            placeholder="Destination"
-            className="p-3 border rounded"
-            value={destination}
-            onChange={(e) => setDestination(e.target.value)}
-            required
-          />
-          <input
-            type="date"
-            className="p-3 border rounded"
-            value={startDate}
-            onChange={(e) => setStartDate(e.target.value)}
-            required
-          />
-          <input
-            type="date"
-            className="p-3 border rounded"
-            value={endDate}
-            onChange={(e) => setEndDate(e.target.value)}
-            required
-          />
-          <textarea
-            placeholder="Notes about your trip..."
-            className="p-3 border rounded h-32"
-            value={notes}
-            onChange={(e) => setNotes(e.target.value)}
-          />
+          <div>
+            <label className="block mb-2 font-semibold">Destination</label>
+            <select
+              value={destination}
+              onChange={(e) => setDestination(e.target.value)}
+              className="w-full p-3 border rounded"
+              required
+            >
+              <option value="">Select Destination</option>
+              {places.map((place) => (
+                <option key={place} value={place}>
+                  {place}
+                </option>
+              ))}
+            </select>
+          </div>
+
+          <div className="flex flex-col space-y-4">
+            <div>
+              <label className="block mb-2 font-semibold">Start Date</label>
+              <input
+                type="date"
+                value={startDate}
+                onChange={(e) => setStartDate(e.target.value)}
+                className="w-full p-3 border rounded"
+                required
+                min={new Date().toISOString().split("T")[0]}
+              />
+            </div>
+
+            <div>
+              <label className="block mb-2 font-semibold">End Date</label>
+              <input
+                type="date"
+                value={endDate}
+                onChange={(e) => setEndDate(e.target.value)}
+                className="w-full p-3 border rounded"
+                required
+                min={startDate}
+              />
+            </div>
+          </div>
+
+          <div>
+            <label className="block mb-2 font-semibold">Invite Travel Companion</label>
+            <select
+              value={travelCompanion}
+              onChange={(e) => {
+                setTravelCompanion(e.target.value);
+                setManualEmail("");
+              }}
+              className="w-full p-3 border rounded"
+            >
+              <option value="">Select Registered User</option>
+              {registeredUsers.map((user) => (
+                <option key={user.id} value={user.email}>
+                  {user.email}
+                </option>
+              ))}
+            </select>
+            <div className="mt-4">
+              <label className="block mb-2 font-semibold">Or Invite by Email (if not registered)</label>
+              <input
+                type="email"
+                value={manualEmail}
+                onChange={(e) => {
+                  setManualEmail(e.target.value);
+                  setTravelCompanion("");
+                }}
+                className="w-full p-3 border rounded"
+                placeholder="example@email.com"
+              />
+            </div>
+          </div>
+
           <button
             type="submit"
-            className="px-6 py-3 bg-green-600 text-white rounded-lg hover:bg-green-700 transition"
+            className="w-full py-3 bg-green-600 text-white rounded-lg hover:bg-green-700 transition"
           >
             Save Trip
           </button>
