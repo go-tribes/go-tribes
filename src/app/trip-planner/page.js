@@ -5,9 +5,17 @@ import { useRouter } from "next/navigation";
 import { auth, db } from "../../../firebase";
 import { signOut } from "firebase/auth";
 import { collection, addDoc, getDocs } from "firebase/firestore";
-import { MapContainer, TileLayer, Marker, Popup } from "react-leaflet";
+import dynamic from "next/dynamic";
+
+// Dynamic imports for react-leaflet components
+const MapContainer = dynamic(() => import("react-leaflet").then(mod => mod.MapContainer), { ssr: false });
+const TileLayer = dynamic(() => import("react-leaflet").then(mod => mod.TileLayer), { ssr: false });
+const Marker = dynamic(() => import("react-leaflet").then(mod => mod.Marker), { ssr: false });
+const Popup = dynamic(() => import("react-leaflet").then(mod => mod.Popup), { ssr: false });
+
 import "leaflet/dist/leaflet.css";
 import L from "leaflet";
+
 
 export default function TripPlanner() {
   const router = useRouter();
