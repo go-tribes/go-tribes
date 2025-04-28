@@ -3,21 +3,22 @@
 import { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
 import { auth, db } from "../../../firebase";
-import { signOut, onAuthStateChanged } from "firebase/auth";
+import { signOut } from "firebase/auth";
 import { collection, addDoc, getDocs } from "firebase/firestore";
-import Head from "next/head";
+import { MapContainer, TileLayer, Marker, Popup } from "react-leaflet";
+import "leaflet/dist/leaflet.css";
+import L from "leaflet";
 
 export default function TripPlanner() {
   const router = useRouter();
 
   const [departFrom, setDepartFrom] = useState("");
   const [destination, setDestination] = useState("");
+  const [departCoord, setDepartCoord] = useState(null);
+  const [destinationCoord, setDestinationCoord] = useState(null);
+
   const [startDate, setStartDate] = useState("");
   const [endDate, setEndDate] = useState("");
-  const [departSuggestions, setDepartSuggestions] = useState([]);
-  const [destSuggestions, setDestSuggestions] = useState([]);
-  const [searchDepart, setSearchDepart] = useState("");
-  const [searchDest, setSearchDest] = useState("");
 
   const [travelCompanion, setTravelCompanion] = useState("");
   const [manualEmail, setManualEmail] = useState("");
@@ -40,43 +41,30 @@ export default function TripPlanner() {
     }
   };
 
-  const fetchCities = async (query, setSuggestions) => {
-    if (!query) {
-      setSuggestions([]);
-      return;
-    }
+  // Geocoding: Convert city to coordinates
+  const fetchCoordinates = async (city, setCoordFunc) => {
+    if (!city) return;
     try {
       const response = await fetch(
-        `https://wft-geo-db.p.rapidapi.com/v1/geo/cities?namePrefix=${query}&limit=5&sort=-population`,
-        {
-          method: "GET",
-          headers: {
-            "X-RapidAPI-Key": "9901c24740msh1fbce6f9459623cp1975a2jsn55e3cd5f1ffa", // <<< YOUR API KEY
-            "X-RapidAPI-Host": "wft-geo-db.p.rapidapi.com",
-          },
-        }
+        `https://nominatim.openstreetmap.org/search?format=json&q=${encodeURIComponent(city)}`
       );
       const data = await response.json();
-      setSuggestions(data.data || []);
+      if (data && data.length > 0) {
+        const { lat, lon } = data[0];
+        setCoordFunc({ lat: parseFloat(lat), lng: parseFloat(lon) });
+      }
     } catch (error) {
-      console.error("Error fetching cities:", error);
+      console.error("Error fetching coordinates:", error);
     }
   };
-  
 
   useEffect(() => {
-    const timer = setTimeout(() => {
-      fetchCities(searchDepart, setDepartSuggestions);
-    }, 400);
-    return () => clearTimeout(timer);
-  }, [searchDepart]);
+    fetchCoordinates(departFrom, setDepartCoord);
+  }, [departFrom]);
 
   useEffect(() => {
-    const timer = setTimeout(() => {
-      fetchCities(searchDest, setDestSuggestions);
-    }, 400);
-    return () => clearTimeout(timer);
-  }, [searchDest]);
+    fetchCoordinates(destination, setDestinationCoord);
+  }, [destination]);
 
   const handleSubmit = async (e) => {
     e.preventDefault();
@@ -87,7 +75,7 @@ export default function TripPlanner() {
     }
 
     if (new Date(startDate) < new Date().setHours(0, 0, 0, 0)) {
-      alert("Start Date must be today or future date!");
+      alert("Start Date must be today or future!");
       return;
     }
 
@@ -131,160 +119,155 @@ export default function TripPlanner() {
     }
   };
 
+  // Custom marker icon (to fix missing default icons)
+  const customIcon = new L.Icon({
+    iconUrl: "https://unpkg.com/leaflet@1.9.3/dist/images/marker-icon.png",
+    iconSize: [25, 41],
+    iconAnchor: [12, 41],
+    popupAnchor: [1, -34],
+    shadowUrl: "https://unpkg.com/leaflet@1.9.3/dist/images/marker-shadow.png",
+    shadowSize: [41, 41],
+  });
+
   return (
     <>
-      <Head>
-        <title>Plan Your Trip - Go-Tribes</title>
-        <meta name="description" content="Plan your next adventure easily with Go-Tribes!" />
-      </Head>
-
-      <main className="flex flex-col items-center justify-center min-h-screen p-8 bg-gradient-to-br from-white via-green-100 to-blue-100">
-        <div className="flex justify-between w-full max-w-4xl mb-6">
-          <button
-            onClick={() => router.push("/view-trips")}
-            className="px-6 py-2 bg-blue-600 text-white rounded hover:bg-blue-700 transition"
-          >
-            View Trips
-          </button>
-
-          <button
-            onClick={handleLogout}
-            className="px-6 py-2 bg-red-600 text-white rounded hover:bg-red-700 transition"
-          >
-            Logout
-          </button>
-        </div>
-
-        <h1 className="text-4xl font-bold text-green-700 mb-8">Plan Your Trip ✈️</h1>
-
-        <form onSubmit={handleSubmit} className="flex flex-col space-y-6 w-full max-w-md bg-white p-8 rounded-lg shadow">
-
-          {/* Depart From */}
-          <div>
-            <label className="block mb-2 font-semibold">Depart From</label>
-            <input
-              type="text"
-              value={searchDepart}
-              onChange={(e) => setSearchDepart(e.target.value)}
-              className="w-full p-3 border rounded"
-              placeholder="Type to search city..."
-            />
-            {departSuggestions.length > 0 && (
-              <ul className="border rounded mt-2 bg-white">
-                {departSuggestions.map((city) => (
-                  <li
-                    key={city.id}
-                    onClick={() => {
-                      setDepartFrom(`${city.city}, ${city.country}`);
-                      setSearchDepart(`${city.city}, ${city.country}`);
-                      setDepartSuggestions([]);
-                    }}
-                    className="p-2 hover:bg-gray-100 cursor-pointer"
-                  >
-                    {city.city}, {city.country}
-                  </li>
-                ))}
-              </ul>
-            )}
-          </div>
-
-          {/* Destination */}
-          <div>
-            <label className="block mb-2 font-semibold">Destination</label>
-            <input
-              type="text"
-              value={searchDest}
-              onChange={(e) => setSearchDest(e.target.value)}
-              className="w-full p-3 border rounded"
-              placeholder="Type to search city..."
-            />
-            {destSuggestions.length > 0 && (
-              <ul className="border rounded mt-2 bg-white">
-                {destSuggestions.map((city) => (
-                  <li
-                    key={city.id}
-                    onClick={() => {
-                      setDestination(`${city.city}, ${city.country}`);
-                      setSearchDest(`${city.city}, ${city.country}`);
-                      setDestSuggestions([]);
-                    }}
-                    className="p-2 hover:bg-gray-100 cursor-pointer"
-                  >
-                    {city.city}, {city.country}
-                  </li>
-                ))}
-              </ul>
-            )}
-          </div>
-
-          {/* Dates */}
-          <div className="flex flex-col space-y-4">
-            <div>
-              <label className="block mb-2 font-semibold">Start Date</label>
-              <input
-                type="date"
-                value={startDate}
-                onChange={(e) => setStartDate(e.target.value)}
-                className="w-full p-3 border rounded"
-                min={new Date().toISOString().split("T")[0]}
-                required
-              />
-            </div>
-            <div>
-              <label className="block mb-2 font-semibold">End Date</label>
-              <input
-                type="date"
-                value={endDate}
-                onChange={(e) => setEndDate(e.target.value)}
-                className="w-full p-3 border rounded"
-                min={startDate}
-                required
-              />
-            </div>
-          </div>
-
-          {/* Travel Companion */}
-          <div>
-            <label className="block mb-2 font-semibold">Invite Travel Companion</label>
-            <select
-              value={travelCompanion}
-              onChange={(e) => {
-                setTravelCompanion(e.target.value);
-                setManualEmail("");
-              }}
-              className="w-full p-3 border rounded"
+      <main className="flex min-h-screen">
+        {/* Left: Form */}
+        <div className="flex flex-col w-full md:w-1/2 p-8 bg-gradient-to-br from-white via-green-100 to-blue-100">
+          <div className="flex justify-between mb-6">
+            <button
+              onClick={() => router.push("/view-trips")}
+              className="px-6 py-2 bg-blue-600 text-white rounded hover:bg-blue-700"
             >
-              <option value="">Select registered user</option>
-              {registeredUsers.map((user) => (
-                <option key={user.id} value={user.email}>
-                  {user.email}
-                </option>
-              ))}
-            </select>
+              View Trips
+            </button>
 
-            <div className="mt-4">
-              <label className="block mb-2 font-semibold">Or Invite by Email</label>
+            <button
+              onClick={handleLogout}
+              className="px-6 py-2 bg-red-600 text-white rounded hover:bg-red-700"
+            >
+              Logout
+            </button>
+          </div>
+
+          <h1 className="text-4xl font-bold text-green-700 mb-8">Plan Your Trip ✈️</h1>
+
+          <form onSubmit={handleSubmit} className="flex flex-col space-y-6">
+            <div>
+              <label className="block mb-2 font-semibold">Depart From</label>
               <input
-                type="email"
-                value={manualEmail}
+                type="text"
+                value={departFrom}
+                onChange={(e) => setDepartFrom(e.target.value)}
+                className="w-full p-3 border rounded"
+                placeholder="Enter Depart City"
+                required
+              />
+            </div>
+
+            <div>
+              <label className="block mb-2 font-semibold">Destination</label>
+              <input
+                type="text"
+                value={destination}
+                onChange={(e) => setDestination(e.target.value)}
+                className="w-full p-3 border rounded"
+                placeholder="Enter Destination City"
+                required
+              />
+            </div>
+
+            <div className="flex flex-col space-y-4">
+              <div>
+                <label className="block mb-2 font-semibold">Start Date</label>
+                <input
+                  type="date"
+                  value={startDate}
+                  onChange={(e) => setStartDate(e.target.value)}
+                  className="w-full p-3 border rounded"
+                  required
+                  min={new Date().toISOString().split("T")[0]}
+                />
+              </div>
+
+              <div>
+                <label className="block mb-2 font-semibold">End Date</label>
+                <input
+                  type="date"
+                  value={endDate}
+                  onChange={(e) => setEndDate(e.target.value)}
+                  className="w-full p-3 border rounded"
+                  required
+                  min={startDate}
+                />
+              </div>
+            </div>
+
+            <div>
+              <label className="block mb-2 font-semibold">Invite Travel Companion</label>
+              <select
+                value={travelCompanion}
                 onChange={(e) => {
-                  setManualEmail(e.target.value);
-                  setTravelCompanion("");
+                  setTravelCompanion(e.target.value);
+                  setManualEmail("");
                 }}
                 className="w-full p-3 border rounded"
-                placeholder="Enter email..."
-              />
-            </div>
-          </div>
+              >
+                <option value="">Select registered user</option>
+                {registeredUsers.map((user) => (
+                  <option key={user.id} value={user.email}>
+                    {user.email}
+                  </option>
+                ))}
+              </select>
 
-          {/* Submit */}
-          <button
-            type="submit"
-            className="w-full py-3 bg-green-600 text-white rounded-lg hover:bg-green-700 transition"
+              <div className="mt-4">
+                <label className="block mb-2 font-semibold">Or Invite by Email</label>
+                <input
+                  type="email"
+                  value={manualEmail}
+                  onChange={(e) => {
+                    setManualEmail(e.target.value);
+                    setTravelCompanion("");
+                  }}
+                  className="w-full p-3 border rounded"
+                  placeholder="Enter email..."
+                />
+              </div>
+            </div>
+
+            <button
+              type="submit"
+              className="w-full py-3 bg-green-600 text-white rounded-lg hover:bg-green-700"
+            >
+              Save Trip
+            </button>
+          </form>
+        </div>
+
+        {/* Right: Map */}
+        <div className="hidden md:flex w-1/2 p-8">
+          <MapContainer
+            center={[20, 0]}
+            zoom={2}
+            style={{ height: "100%", width: "100%" }}
           >
-            Save Trip
-          </button>
-        </form>
+            <TileLayer
+              url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
+              attribution='&copy; <a href="http://osm.org/copyright">OpenStreetMap</a> contributors'
+            />
+            {departCoord && (
+              <Marker position={departCoord} icon={customIcon}>
+                <Popup>Depart: {departFrom}</Popup>
+              </Marker>
+            )}
+            {destinationCoord && (
+              <Marker position={destinationCoord} icon={customIcon}>
+                <Popup>Destination: {destination}</Popup>
+              </Marker>
+            )}
+          </MapContainer>
+        </div>
       </main>
     </>
   );
