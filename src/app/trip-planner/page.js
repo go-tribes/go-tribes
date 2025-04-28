@@ -152,9 +152,12 @@ export default function TripPlanner() {
   };
 
   return (
-    <LoadScript googleMapsApiKey="AIzaSyBmK5xIYDnz1DCzDuFzc5WATfpvGpk5NkU" libraries={libraries}>
+    <LoadScript
+      googleMapsApiKey={process.env.NEXT_PUBLIC_GOOGLE_MAPS_API_KEY || ""}
+      libraries={libraries}
+    >
       <main className="flex min-h-screen">
-        {/* Left Side: Form */}
+        {/* Left Form */}
         <div className="flex flex-col w-full md:w-1/2 p-8 bg-gradient-to-br from-white via-green-100 to-blue-100">
           <div className="flex justify-between mb-6">
             <button
@@ -174,7 +177,8 @@ export default function TripPlanner() {
           <h1 className="text-4xl font-bold text-green-700 mb-8">Plan Your Trip ✈️</h1>
 
           <form onSubmit={handleSubmit} className="flex flex-col space-y-6">
-            {/* Depart From */}
+
+            {/* Depart Field */}
             <div>
               <label className="block mb-2 font-semibold">Depart From</label>
               <Autocomplete
@@ -203,7 +207,7 @@ export default function TripPlanner() {
               )}
             </div>
 
-            {/* Destination */}
+            {/* Destination Field */}
             <div>
               <label className="block mb-2 font-semibold">Destination</label>
               <Autocomplete
@@ -232,7 +236,7 @@ export default function TripPlanner() {
               )}
             </div>
 
-            {/* Start Date and End Date */}
+            {/* Start and End Date */}
             <div className="flex flex-col space-y-4">
               <div>
                 <label className="block mb-2 font-semibold">Start Date</label>
@@ -259,7 +263,7 @@ export default function TripPlanner() {
               </div>
             </div>
 
-            {/* Companion Selection */}
+            {/* Invite Companion */}
             <div>
               <label className="block mb-2 font-semibold">Invite Travel Companion</label>
               <select
@@ -300,10 +304,11 @@ export default function TripPlanner() {
             >
               Save Trip
             </button>
+
           </form>
         </div>
 
-        {/* Right Side: Map */}
+        {/* Map Display */}
         <div className="hidden md:flex w-1/2 p-8">
           <TripMap
             departCoord={departCoord}
