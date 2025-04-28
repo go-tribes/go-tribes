@@ -51,7 +51,7 @@ export default function TripPlanner() {
         {
           method: "GET",
           headers: {
-            "X-RapidAPI-Key": process.env.NEXT_PUBLIC_GEODB_API_KEY,
+            "X-RapidAPI-Key": "9901c24740msh1fbce6f9459623cp1975a2jsn55e3cd5f1ffa", // <<< YOUR API KEY
             "X-RapidAPI-Host": "wft-geo-db.p.rapidapi.com",
           },
         }
@@ -62,6 +62,7 @@ export default function TripPlanner() {
       console.error("Error fetching cities:", error);
     }
   };
+  
 
   useEffect(() => {
     const timer = setTimeout(() => {
