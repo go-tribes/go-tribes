@@ -9,12 +9,8 @@ import { signOut } from "firebase/auth";
 import { collection, addDoc, getDocs } from "firebase/firestore";
 import dynamic from "next/dynamic";
 
+// Dynamically import TripMap with SSR disabled
 const TripMap = dynamic(() => import("../components/TripMap"), { ssr: false });
-
-
-import "leaflet/dist/leaflet.css";
-import L from "leaflet";
-
 
 export default function TripPlanner() {
   const router = useRouter();
@@ -48,7 +44,6 @@ export default function TripPlanner() {
     }
   };
 
-  // Geocoding: Convert city to coordinates
   const fetchCoordinates = async (city, setCoordFunc) => {
     if (!city) return;
     try {
@@ -126,20 +121,10 @@ export default function TripPlanner() {
     }
   };
 
-  // Custom marker icon (to fix missing default icons)
-  const customIcon = new L.Icon({
-    iconUrl: "https://unpkg.com/leaflet@1.9.3/dist/images/marker-icon.png",
-    iconSize: [25, 41],
-    iconAnchor: [12, 41],
-    popupAnchor: [1, -34],
-    shadowUrl: "https://unpkg.com/leaflet@1.9.3/dist/images/marker-shadow.png",
-    shadowSize: [41, 41],
-  });
-
   return (
     <>
       <main className="flex min-h-screen">
-        {/* Left: Form */}
+        {/* Left Side: Form */}
         <div className="flex flex-col w-full md:w-1/2 p-8 bg-gradient-to-br from-white via-green-100 to-blue-100">
           <div className="flex justify-between mb-6">
             <button
@@ -148,7 +133,6 @@ export default function TripPlanner() {
             >
               View Trips
             </button>
-
             <button
               onClick={handleLogout}
               className="px-6 py-2 bg-red-600 text-white rounded hover:bg-red-700"
@@ -252,16 +236,15 @@ export default function TripPlanner() {
           </form>
         </div>
 
-        {/* Right: Map */}
+        {/* Right Side: Map */}
         <div className="hidden md:flex w-1/2 p-8">
-  <TripMap
-    departCoord={departCoord}
-    destinationCoord={destinationCoord}
-    departFrom={departFrom}
-    destination={destination}
-  />
-</div>
-
+          <TripMap
+            departCoord={departCoord}
+            destinationCoord={destinationCoord}
+            departFrom={departFrom}
+            destination={destination}
+          />
+        </div>
       </main>
     </>
   );
