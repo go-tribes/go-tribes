@@ -152,7 +152,7 @@ export default function TripPlanner() {
   };
 
   return (
-    <LoadScript googleMapsApiKey="YOUR_GOOGLE_API_KEY" libraries={libraries}>
+    <LoadScript googleMapsApiKey="AIzaSyBmK5xIYDnz1DCzDuFzc5WATfpvGpk5NkU" libraries={libraries}>
       <main className="flex min-h-screen">
         {/* Left Side: Form */}
         <div className="flex flex-col w-full md:w-1/2 p-8 bg-gradient-to-br from-white via-green-100 to-blue-100">
