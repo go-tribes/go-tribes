@@ -7,8 +7,8 @@ import { signOut } from "firebase/auth";
 import { collection, addDoc, getDocs } from "firebase/firestore";
 import dynamic from "next/dynamic";
 
-// Dynamic imports for react-leaflet components
 const TripMap = dynamic(() => import("../components/TripMap"), { ssr: false });
+
 
 import "leaflet/dist/leaflet.css";
 import L from "leaflet";
