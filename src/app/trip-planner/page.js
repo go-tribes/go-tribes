@@ -7,10 +7,10 @@ import { useRouter } from "next/navigation";
 import { auth, db } from "../../../firebase";
 import { signOut } from "firebase/auth";
 import { collection, addDoc, getDocs } from "firebase/firestore";
-import dynamic from "next/dynamic";
+import dynamicImport from "next/dynamic";
 
-// Dynamically import TripMap with SSR disabled
-const TripMap = dynamic(() => import("../components/TripMap"), { ssr: false });
+// Load TripMap dynamically
+const TripMap = dynamicImport(() => import("../components/TripMap"), { ssr: false });
 
 export default function TripPlanner() {
   const router = useRouter();
@@ -34,7 +34,7 @@ export default function TripPlanner() {
   const fetchRegisteredUsers = async () => {
     try {
       const usersSnap = await getDocs(collection(db, "users"));
-      const usersData = usersSnap.docs.map(doc => ({
+      const usersData = usersSnap.docs.map((doc) => ({
         id: doc.id,
         email: doc.data().email,
       }));
@@ -122,130 +122,128 @@ export default function TripPlanner() {
   };
 
   return (
-    <>
-      <main className="flex min-h-screen">
-        {/* Left Side: Form */}
-        <div className="flex flex-col w-full md:w-1/2 p-8 bg-gradient-to-br from-white via-green-100 to-blue-100">
-          <div className="flex justify-between mb-6">
-            <button
-              onClick={() => router.push("/view-trips")}
-              className="px-6 py-2 bg-blue-600 text-white rounded hover:bg-blue-700"
-            >
-              View Trips
-            </button>
-            <button
-              onClick={handleLogout}
-              className="px-6 py-2 bg-red-600 text-white rounded hover:bg-red-700"
-            >
-              Logout
-            </button>
+    <main className="flex min-h-screen">
+      {/* Left Side: Form */}
+      <div className="flex flex-col w-full md:w-1/2 p-8 bg-gradient-to-br from-white via-green-100 to-blue-100">
+        <div className="flex justify-between mb-6">
+          <button
+            onClick={() => router.push("/view-trips")}
+            className="px-6 py-2 bg-blue-600 text-white rounded hover:bg-blue-700"
+          >
+            View Trips
+          </button>
+          <button
+            onClick={handleLogout}
+            className="px-6 py-2 bg-red-600 text-white rounded hover:bg-red-700"
+          >
+            Logout
+          </button>
+        </div>
+
+        <h1 className="text-4xl font-bold text-green-700 mb-8">Plan Your Trip ✈️</h1>
+
+        <form onSubmit={handleSubmit} className="flex flex-col space-y-6">
+          <div>
+            <label className="block mb-2 font-semibold">Depart From</label>
+            <input
+              type="text"
+              value={departFrom}
+              onChange={(e) => setDepartFrom(e.target.value)}
+              className="w-full p-3 border rounded"
+              placeholder="Enter Depart City"
+              required
+            />
           </div>
 
-          <h1 className="text-4xl font-bold text-green-700 mb-8">Plan Your Trip ✈️</h1>
+          <div>
+            <label className="block mb-2 font-semibold">Destination</label>
+            <input
+              type="text"
+              value={destination}
+              onChange={(e) => setDestination(e.target.value)}
+              className="w-full p-3 border rounded"
+              placeholder="Enter Destination City"
+              required
+            />
+          </div>
 
-          <form onSubmit={handleSubmit} className="flex flex-col space-y-6">
+          <div className="flex flex-col space-y-4">
             <div>
-              <label className="block mb-2 font-semibold">Depart From</label>
+              <label className="block mb-2 font-semibold">Start Date</label>
               <input
-                type="text"
-                value={departFrom}
-                onChange={(e) => setDepartFrom(e.target.value)}
+                type="date"
+                value={startDate}
+                onChange={(e) => setStartDate(e.target.value)}
                 className="w-full p-3 border rounded"
-                placeholder="Enter Depart City"
                 required
+                min={new Date().toISOString().split("T")[0]}
               />
             </div>
 
             <div>
-              <label className="block mb-2 font-semibold">Destination</label>
+              <label className="block mb-2 font-semibold">End Date</label>
               <input
-                type="text"
-                value={destination}
-                onChange={(e) => setDestination(e.target.value)}
+                type="date"
+                value={endDate}
+                onChange={(e) => setEndDate(e.target.value)}
                 className="w-full p-3 border rounded"
-                placeholder="Enter Destination City"
                 required
+                min={startDate}
               />
             </div>
+          </div>
 
-            <div className="flex flex-col space-y-4">
-              <div>
-                <label className="block mb-2 font-semibold">Start Date</label>
-                <input
-                  type="date"
-                  value={startDate}
-                  onChange={(e) => setStartDate(e.target.value)}
-                  className="w-full p-3 border rounded"
-                  required
-                  min={new Date().toISOString().split("T")[0]}
-                />
-              </div>
+          <div>
+            <label className="block mb-2 font-semibold">Invite Travel Companion</label>
+            <select
+              value={travelCompanion}
+              onChange={(e) => {
+                setTravelCompanion(e.target.value);
+                setManualEmail("");
+              }}
+              className="w-full p-3 border rounded"
+            >
+              <option value="">Select registered user</option>
+              {registeredUsers.map((user) => (
+                <option key={user.id} value={user.email}>
+                  {user.email}
+                </option>
+              ))}
+            </select>
 
-              <div>
-                <label className="block mb-2 font-semibold">End Date</label>
-                <input
-                  type="date"
-                  value={endDate}
-                  onChange={(e) => setEndDate(e.target.value)}
-                  className="w-full p-3 border rounded"
-                  required
-                  min={startDate}
-                />
-              </div>
-            </div>
-
-            <div>
-              <label className="block mb-2 font-semibold">Invite Travel Companion</label>
-              <select
-                value={travelCompanion}
+            <div className="mt-4">
+              <label className="block mb-2 font-semibold">Or Invite by Email</label>
+              <input
+                type="email"
+                value={manualEmail}
                 onChange={(e) => {
-                  setTravelCompanion(e.target.value);
-                  setManualEmail("");
+                  setManualEmail(e.target.value);
+                  setTravelCompanion("");
                 }}
                 className="w-full p-3 border rounded"
-              >
-                <option value="">Select registered user</option>
-                {registeredUsers.map((user) => (
-                  <option key={user.id} value={user.email}>
-                    {user.email}
-                  </option>
-                ))}
-              </select>
-
-              <div className="mt-4">
-                <label className="block mb-2 font-semibold">Or Invite by Email</label>
-                <input
-                  type="email"
-                  value={manualEmail}
-                  onChange={(e) => {
-                    setManualEmail(e.target.value);
-                    setTravelCompanion("");
-                  }}
-                  className="w-full p-3 border rounded"
-                  placeholder="Enter email..."
-                />
-              </div>
+                placeholder="Enter email..."
+              />
             </div>
+          </div>
 
-            <button
-              type="submit"
-              className="w-full py-3 bg-green-600 text-white rounded-lg hover:bg-green-700"
-            >
-              Save Trip
-            </button>
-          </form>
-        </div>
+          <button
+            type="submit"
+            className="w-full py-3 bg-green-600 text-white rounded-lg hover:bg-green-700"
+          >
+            Save Trip
+          </button>
+        </form>
+      </div>
 
-        {/* Right Side: Map */}
-        <div className="hidden md:flex w-1/2 p-8">
-          <TripMap
-            departCoord={departCoord}
-            destinationCoord={destinationCoord}
-            departFrom={departFrom}
-            destination={destination}
-          />
-        </div>
-      </main>
-    </>
+      {/* Right Side: Map */}
+      <div className="hidden md:flex w-1/2 p-8">
+        <TripMap
+          departCoord={departCoord}
+          destinationCoord={destinationCoord}
+          departFrom={departFrom}
+          destination={destination}
+        />
+      </div>
+    </main>
   );
 }
