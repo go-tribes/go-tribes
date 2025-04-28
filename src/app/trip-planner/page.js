@@ -8,10 +8,7 @@ import { collection, addDoc, getDocs } from "firebase/firestore";
 import dynamic from "next/dynamic";
 
 // Dynamic imports for react-leaflet components
-const MapContainer = dynamic(() => import("react-leaflet").then(mod => mod.MapContainer), { ssr: false });
-const TileLayer = dynamic(() => import("react-leaflet").then(mod => mod.TileLayer), { ssr: false });
-const Marker = dynamic(() => import("react-leaflet").then(mod => mod.Marker), { ssr: false });
-const Popup = dynamic(() => import("react-leaflet").then(mod => mod.Popup), { ssr: false });
+const TripMap = dynamic(() => import("../components/TripMap"), { ssr: false });
 
 import "leaflet/dist/leaflet.css";
 import L from "leaflet";
@@ -255,27 +252,14 @@ export default function TripPlanner() {
 
         {/* Right: Map */}
         <div className="hidden md:flex w-1/2 p-8">
-          <MapContainer
-            center={[20, 0]}
-            zoom={2}
-            style={{ height: "100%", width: "100%" }}
-          >
-            <TileLayer
-              url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
-              attribution='&copy; <a href="http://osm.org/copyright">OpenStreetMap</a> contributors'
-            />
-            {departCoord && (
-              <Marker position={departCoord} icon={customIcon}>
-                <Popup>Depart: {departFrom}</Popup>
-              </Marker>
-            )}
-            {destinationCoord && (
-              <Marker position={destinationCoord} icon={customIcon}>
-                <Popup>Destination: {destination}</Popup>
-              </Marker>
-            )}
-          </MapContainer>
-        </div>
+  <TripMap
+    departCoord={departCoord}
+    destinationCoord={destinationCoord}
+    departFrom={departFrom}
+    destination={destination}
+  />
+</div>
+
       </main>
     </>
   );
