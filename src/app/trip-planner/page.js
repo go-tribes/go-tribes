@@ -8,8 +8,10 @@ import { collection, addDoc, getDocs } from "firebase/firestore";
 import dynamic from "next/dynamic";
 import { LoadScript, Autocomplete } from "@react-google-maps/api";
 
+// Dynamic import for TripMap
 const TripMap = dynamic(() => import("../components/TripMap"), { ssr: false });
 
+// Load Google Maps "places" library
 const libraries = ["places"];
 
 export default function TripPlanner() {
@@ -157,7 +159,7 @@ export default function TripPlanner() {
       libraries={libraries}
     >
       <main className="flex min-h-screen">
-        {/* Left Form */}
+        {/* Left Side Form */}
         <div className="flex flex-col w-full md:w-1/2 p-8 bg-gradient-to-br from-white via-green-100 to-blue-100">
           <div className="flex justify-between mb-6">
             <button
@@ -177,8 +179,7 @@ export default function TripPlanner() {
           <h1 className="text-4xl font-bold text-green-700 mb-8">Plan Your Trip ✈️</h1>
 
           <form onSubmit={handleSubmit} className="flex flex-col space-y-6">
-
-            {/* Depart Field */}
+            {/* Depart From Field */}
             <div>
               <label className="block mb-2 font-semibold">Depart From</label>
               <Autocomplete
@@ -214,7 +215,6 @@ export default function TripPlanner() {
                 onLoad={onLoadDestination}
                 onPlaceChanged={onPlaceChangedDestination}
                 options={{
-                  types: ["establishment", "tourist_attraction", "point_of_interest"],
                   fields: ["place_id", "geometry", "name", "formatted_address"],
                 }}
               >
@@ -236,7 +236,7 @@ export default function TripPlanner() {
               )}
             </div>
 
-            {/* Start and End Date */}
+            {/* Date Fields */}
             <div className="flex flex-col space-y-4">
               <div>
                 <label className="block mb-2 font-semibold">Start Date</label>
@@ -297,18 +297,17 @@ export default function TripPlanner() {
               </div>
             </div>
 
-            {/* Submit */}
+            {/* Submit Button */}
             <button
               type="submit"
               className="w-full py-3 bg-green-600 text-white rounded-lg hover:bg-green-700"
             >
               Save Trip
             </button>
-
           </form>
         </div>
 
-        {/* Map Display */}
+        {/* Right Side Map */}
         <div className="hidden md:flex w-1/2 p-8">
           <TripMap
             departCoord={departCoord}
