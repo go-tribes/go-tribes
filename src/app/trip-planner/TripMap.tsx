@@ -15,7 +15,7 @@ export default function TripMap({
 
   const containerStyle = {
     width: "100%",
-    height: "100%",
+    height: "100vh",
   };
 
   const center = destinationCoord || departCoord || { lat: 3.139, lng: 101.6869 }; // Default: KL
