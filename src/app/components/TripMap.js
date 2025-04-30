@@ -2,31 +2,48 @@
 
 import { GoogleMap, Marker, useJsApiLoader } from "@react-google-maps/api";
 
-export default function TripMap({ departCoord, destinationCoord, departFrom, destination }) {
+type TripMapProps = {
+  departCoord: { lat: number; lng: number } | null;
+  destinationCoord: { lat: number; lng: number } | null;
+  departFrom: string;
+  destination: string;
+};
+
+export default function TripMap({
+  departCoord,
+  destinationCoord,
+  departFrom,
+  destination,
+}: TripMapProps) {
   const { isLoaded } = useJsApiLoader({
-    googleMapsApiKey: "YOUR_GOOGLE_API_KEY",
+    googleMapsApiKey: process.env.NEXT_PUBLIC_GOOGLE_MAPS_API_KEY || "",
     libraries: ["places"],
   });
 
-  const center = destinationCoord || departCoord || { lat: 3.139, lng: 101.6869 }; // Default to KL center
   const containerStyle = {
     width: "100%",
     height: "100%",
   };
 
-  if (!isLoaded) return <div>Loading Map...</div>;
+  const center = destinationCoord || departCoord || { lat: 3.139, lng: 101.6869 }; // Default: Kuala Lumpur
+
+  if (!isLoaded) return <div>Loading map...</div>;
 
   return (
-    <GoogleMap
-      mapContainerStyle={containerStyle}
-      center={center}
-      zoom={10}
-    >
+    <GoogleMap mapContainerStyle={containerStyle} center={center} zoom={10}>
       {departCoord && (
-        <Marker position={departCoord} label="Depart" />
+        <Marker
+          position={departCoord}
+          label="Depart"
+          title={departFrom}
+        />
       )}
       {destinationCoord && (
-        <Marker position={destinationCoord} label="Destination" />
+        <Marker
+          position={destinationCoord}
+          label="Dest"
+          title={destination}
+        />
       )}
     </GoogleMap>
   );
