@@ -8,7 +8,6 @@ import { collection, addDoc, getDocs } from "firebase/firestore";
 import dynamic from "next/dynamic";
 import { LoadScript, Autocomplete } from "@react-google-maps/api";
 
-// Dynamic load of Map component
 const TripMap = dynamic(() => import("../components/TripMap"), { ssr: false });
 
 const libraries = ["places"];
@@ -146,139 +145,140 @@ export default function TripPlanner() {
       libraries={libraries}
     >
       <main className="flex flex-col min-h-screen">
-        {/* TOP SECTION */}
+        {/* TOP HALF: Form and Map */}
         <section className="flex flex-row w-full h-1/2">
-          {/* Form Left */}
-          <div className="w-1/2 p-6 bg-gradient-to-br from-white via-green-100 to-blue-100 overflow-auto">
-            <div className="flex justify-between mb-4">
-              <button
-                onClick={() => router.push("/view-trips")}
-                className="px-4 py-2 bg-blue-600 text-white rounded hover:bg-blue-700"
-              >
-                View Trips
-              </button>
-              <button
-                onClick={handleLogout}
-                className="px-4 py-2 bg-red-600 text-white rounded hover:bg-red-700"
-              >
-                Logout
-              </button>
+          {/* Form – Narrow, Premium */}
+          <div className="w-1/2 flex justify-center items-start p-6 bg-gradient-to-br from-white via-green-100 to-blue-100 overflow-auto">
+            <div className="w-full max-w-md">
+              <div className="flex justify-between mb-4">
+                <button
+                  onClick={() => router.push("/view-trips")}
+                  className="px-4 py-2 bg-blue-600 text-white rounded hover:bg-blue-700 text-sm"
+                >
+                  View Trips
+                </button>
+                <button
+                  onClick={handleLogout}
+                  className="px-4 py-2 bg-red-600 text-white rounded hover:bg-red-700 text-sm"
+                >
+                  Logout
+                </button>
+              </div>
+
+              <h1 className="text-2xl font-bold text-green-700 mb-6">Plan Your Trip</h1>
+
+              <form onSubmit={handleSubmit} className="flex flex-col space-y-4 text-sm">
+                <div>
+                  <label className="block mb-1 font-medium text-gray-700">Depart From</label>
+                  <Autocomplete
+                    onLoad={onLoadDepart}
+                    onPlaceChanged={onPlaceChangedDepart}
+                    options={{
+                      types: ["(cities)"],
+                      fields: ["place_id", "geometry", "name", "formatted_address"],
+                    }}
+                  >
+                    <input
+                      type="text"
+                      value={departFrom}
+                      onChange={(e) => setDepartFrom(e.target.value)}
+                      className="w-full p-2 border border-gray-300 rounded focus:outline-none focus:ring-2 focus:ring-green-400"
+                      placeholder="City of origin"
+                      required
+                    />
+                  </Autocomplete>
+                  {departDetails && (
+                    <p className="text-xs text-gray-600 mt-1">{departDetails.name}, {departDetails.address}</p>
+                  )}
+                </div>
+
+                <div>
+                  <label className="block mb-1 font-medium text-gray-700">Destination</label>
+                  <Autocomplete
+                    onLoad={onLoadDestination}
+                    onPlaceChanged={onPlaceChangedDestination}
+                    options={{
+                      fields: ["place_id", "geometry", "name", "formatted_address"],
+                    }}
+                  >
+                    <input
+                      type="text"
+                      value={destination}
+                      onChange={(e) => setDestination(e.target.value)}
+                      className="w-full p-2 border border-gray-300 rounded focus:outline-none focus:ring-2 focus:ring-green-400"
+                      placeholder="Destination place"
+                      required
+                    />
+                  </Autocomplete>
+                  {destinationDetails && (
+                    <p className="text-xs text-gray-600 mt-1">{destinationDetails.name}, {destinationDetails.address}</p>
+                  )}
+                </div>
+
+                <div className="flex gap-3">
+                  <div className="flex-1">
+                    <label className="block mb-1 font-medium text-gray-700">Start Date</label>
+                    <input
+                      type="date"
+                      value={startDate}
+                      onChange={(e) => setStartDate(e.target.value)}
+                      className="w-full p-2 border border-gray-300 rounded focus:outline-none"
+                      required
+                    />
+                  </div>
+                  <div className="flex-1">
+                    <label className="block mb-1 font-medium text-gray-700">End Date</label>
+                    <input
+                      type="date"
+                      value={endDate}
+                      onChange={(e) => setEndDate(e.target.value)}
+                      className="w-full p-2 border border-gray-300 rounded focus:outline-none"
+                      required
+                      min={startDate}
+                    />
+                  </div>
+                </div>
+
+                <div>
+                  <label className="block mb-1 font-medium text-gray-700">Invite Companion</label>
+                  <select
+                    value={travelCompanion}
+                    onChange={(e) => {
+                      setTravelCompanion(e.target.value);
+                      setManualEmail("");
+                    }}
+                    className="w-full p-2 border border-gray-300 rounded text-sm"
+                  >
+                    <option value="">Select registered user</option>
+                    {registeredUsers.map((user) => (
+                      <option key={user.id} value={user.email}>
+                        {user.email}
+                      </option>
+                    ))}
+                  </select>
+                  <input
+                    type="email"
+                    value={manualEmail}
+                    onChange={(e) => {
+                      setManualEmail(e.target.value);
+                      setTravelCompanion("");
+                    }}
+                    className="w-full mt-2 p-2 border border-gray-300 rounded"
+                    placeholder="Or enter email..."
+                  />
+                </div>
+
+                <button
+                  type="submit"
+                  className="w-full py-2 bg-green-600 text-white rounded hover:bg-green-700 transition"
+                >
+                  Save Trip
+                </button>
+              </form>
             </div>
-
-            <h1 className="text-3xl font-bold text-green-700 mb-6">Plan Your Trip ✈️</h1>
-
-            <form onSubmit={handleSubmit} className="flex flex-col space-y-4">
-              <div>
-                <label className="block mb-1 font-semibold">Depart From</label>
-                <Autocomplete
-                  onLoad={onLoadDepart}
-                  onPlaceChanged={onPlaceChangedDepart}
-                  options={{
-                    types: ["(cities)"],
-                    fields: ["place_id", "geometry", "name", "formatted_address"],
-                  }}
-                >
-                  <input
-                    type="text"
-                    value={departFrom}
-                    onChange={(e) => setDepartFrom(e.target.value)}
-                    className="w-full p-3 border rounded"
-                    placeholder="Enter Depart City"
-                    required
-                  />
-                </Autocomplete>
-                {departDetails && (
-                  <p className="text-sm text-gray-600 mt-1">{departDetails.name}, {departDetails.address}</p>
-                )}
-              </div>
-
-              <div>
-                <label className="block mb-1 font-semibold">Destination</label>
-                <Autocomplete
-                  onLoad={onLoadDestination}
-                  onPlaceChanged={onPlaceChangedDestination}
-                  options={{
-                    fields: ["place_id", "geometry", "name", "formatted_address"],
-                  }}
-                >
-                  <input
-                    type="text"
-                    value={destination}
-                    onChange={(e) => setDestination(e.target.value)}
-                    className="w-full p-3 border rounded"
-                    placeholder="Enter Destination Place"
-                    required
-                  />
-                </Autocomplete>
-                {destinationDetails && (
-                  <p className="text-sm text-gray-600 mt-1">{destinationDetails.name}, {destinationDetails.address}</p>
-                )}
-              </div>
-
-              <div className="flex gap-4">
-                <div className="flex-1">
-                  <label className="block mb-1 font-semibold">Start Date</label>
-                  <input
-                    type="date"
-                    value={startDate}
-                    onChange={(e) => setStartDate(e.target.value)}
-                    className="w-full p-3 border rounded"
-                    required
-                  />
-                </div>
-                <div className="flex-1">
-                  <label className="block mb-1 font-semibold">End Date</label>
-                  <input
-                    type="date"
-                    value={endDate}
-                    onChange={(e) => setEndDate(e.target.value)}
-                    className="w-full p-3 border rounded"
-                    required
-                    min={startDate}
-                  />
-                </div>
-              </div>
-
-              <div>
-                <label className="block mb-1 font-semibold">Invite Companion</label>
-                <select
-                  value={travelCompanion}
-                  onChange={(e) => {
-                    setTravelCompanion(e.target.value);
-                    setManualEmail("");
-                  }}
-                  className="w-full p-3 border rounded"
-                >
-                  <option value="">Select registered user</option>
-                  {registeredUsers.map((user) => (
-                    <option key={user.id} value={user.email}>
-                      {user.email}
-                    </option>
-                  ))}
-                </select>
-
-                <input
-                  type="email"
-                  value={manualEmail}
-                  onChange={(e) => {
-                    setManualEmail(e.target.value);
-                    setTravelCompanion("");
-                  }}
-                  className="w-full p-3 border rounded mt-2"
-                  placeholder="Or enter email..."
-                />
-              </div>
-
-              <button
-                type="submit"
-                className="w-full py-3 bg-green-600 text-white rounded hover:bg-green-700"
-              >
-                Save Trip
-              </button>
-            </form>
           </div>
 
-          {/* Map Right */}
+          {/* MAP */}
           <div className="w-1/2 h-full">
             <TripMap
               departCoord={departCoord}
@@ -289,11 +289,11 @@ export default function TripPlanner() {
           </div>
         </section>
 
-        {/* BOTTOM SECTION – For Future Use */}
+        {/* BOTTOM HALF – Reserved */}
         <section className="w-full h-1/2 p-6 bg-gray-50 border-t">
           <h2 className="text-xl font-semibold text-gray-700 mb-4">Recommended Destinations (Coming Soon)</h2>
           <div className="text-gray-500 italic">
-            This section will show suggested places based on your destination.
+            This section will show suggested places or trip ideas based on your selected destination.
           </div>
         </section>
       </main>
