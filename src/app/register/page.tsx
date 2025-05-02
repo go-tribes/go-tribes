@@ -29,7 +29,7 @@ export default function RegisterPage() {
         profileImage: "",
         sharedTrips: 0,
       });
-      router.push("/dashboard");
+      router.push("/profile")
     } catch (err: any) {
       setError(err.message);
     }
