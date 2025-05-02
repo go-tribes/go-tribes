@@ -46,7 +46,7 @@ export default function HomePage() {
       <section className="px-6 py-12 bg-yellow-50">
         <div className="flex items-center justify-center mb-6 space-x-3">
           <Image src="/verticallogo.jpg" alt="Go-Tribes Logo" width={30} height={30} />
-          <h3 className="text-2xl font-bold text-yellow-700">Our Top Triber</h3>
+          <h3 className="text-2xl font-bold text-yellow-700">Our Top Tribers</h3>
         </div>
         <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-6 max-w-5xl mx-auto">
           {topProfiles.map(profile => (
