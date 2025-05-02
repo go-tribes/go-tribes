@@ -1,43 +1,81 @@
 "use client";
 
-import Head from "next/head";
+import { useEffect, useState } from "react";
+import { useRouter } from "next/navigation";
 import Link from "next/link";
+import Image from "next/image";
+import { auth, db } from "../firebase";
+import { onAuthStateChanged } from "firebase/auth";
+import { collection, getDocs } from "firebase/firestore";
 
 export default function HomePage() {
+  const router = useRouter();
+  const [user, setUser] = useState(null);
+  const [topProfiles, setTopProfiles] = useState([]);
+
+  useEffect(() => {
+    const unsubscribe = onAuthStateChanged(auth, (currentUser) => {
+      setUser(currentUser);
+    });
+    return () => unsubscribe();
+  }, []);
+
+  useEffect(() => {
+    const fetchTopProfiles = async () => {
+      const profilesSnapshot = await getDocs(collection(db, "users"));
+      const profilesData = profilesSnapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
+      const sortedProfiles = profilesData.sort((a, b) => (b.sharedTrips || 0) - (a.sharedTrips || 0));
+      setTopProfiles(sortedProfiles.slice(0, 6));
+    };
+    fetchTopProfiles();
+  }, []);
+
   return (
-    <>
-      <Head>
-        {/* SEO Title and Description */}
-        <title>Go-Tribes | Plan Your Perfect Adventures</title>
-        <meta name="description" content="Create personalized travel plans, save trips, and explore the world with Go-Tribes!" />
+    <div className="min-h-screen bg-gradient-to-br from-gray-900 via-gray-800 to-black text-white">
+      {/* Header */}
+      <header className="flex justify-between items-center p-6 border-b border-gray-700">
+        <h1 className="text-3xl font-bold tracking-tight">Go-Tribes</h1>
+        <div>
+          {user ? (
+            <button onClick={() => router.push("/dashboard")} className="px-4 py-2 bg-blue-600 rounded hover:bg-blue-500">Dashboard</button>
+          ) : (
+            <>
+              <Link href="/login" className="px-4 py-2 mr-2 border border-white rounded hover:bg-white hover:text-black">Login</Link>
+              <Link href="/register" className="px-4 py-2 bg-blue-600 rounded hover:bg-blue-500">Register</Link>
+            </>
+          )}
+        </div>
+      </header>
 
-        {/* Open Graph (OG) Tags */}
-        <meta property="og:title" content="Go-Tribes | Plan Your Perfect Adventures" />
-        <meta property="og:description" content="Create personalized travel plans, save trips, and explore the world with Go-Tribes!" />
-        <meta property="og:image" content="https://go-tribes.com/og-image.jpg?v=2" />
-        <meta property="og:url" content="https://go-tribes.com?v=2" />
-        <meta property="og:type" content="website" />
+      {/* Hero Section */}
+      <section className="text-center py-20 px-6">
+        <h2 className="text-5xl font-bold mb-4">Discover. Plan. Share.</h2>
+        <p className="text-lg text-gray-300 mb-6">Explore travel experiences and tribes like never before.</p>
+        <button onClick={() => router.push(user ? "/dashboard" : "/register")} className="px-6 py-3 text-lg font-semibold bg-blue-600 rounded hover:bg-blue-500">
+          {user ? "Go to Dashboard" : "Start Planning"}
+        </button>
+      </section>
 
-        {/* Twitter Card Tags (optional but recommended) */}
-        <meta name="twitter:card" content="summary_large_image" />
-        <meta name="twitter:title" content="Go-Tribes | Plan Your Perfect Adventures" />
-        <meta name="twitter:description" content="Create personalized travel plans, save trips, and explore the world with Go-Tribes!" />
-        <meta name="twitter:image" content="https://go-tribes.com/og-image.jpg" />
-      </Head>
+      {/* Top Shared Profiles */}
+      <section className="px-6 py-12 bg-gray-900">
+        <h3 className="text-2xl font-bold mb-6 text-center">Top Shared Profiles</h3>
+        <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-6 max-w-5xl mx-auto">
+          {topProfiles.map(profile => (
+            <div key={profile.id} className="bg-gray-800 rounded-xl p-4 text-center shadow-md">
+              <Image src={profile.profileImage || "/default-avatar.png"} alt={profile.displayName} width={80} height={80} className="rounded-full mx-auto mb-4" />
+              <h4 className="text-lg font-semibold">{profile.displayName}</h4>
+              <p className="text-sm text-gray-400 mb-2">Rank: {profile.tribeRank || "Explorer"}</p>
+              <p className="text-sm">Trips Shared: {profile.sharedTrips || 0}</p>
+              <Link href={`/profile/${profile.id}`} className="mt-3 inline-block text-blue-400 hover:underline">View Profile</Link>
+            </div>
+          ))}
+        </div>
+      </section>
 
-      <main className="flex min-h-screen flex-col items-center justify-center p-8 bg-gradient-to-br from-white via-green-100 to-blue-100">
-        <h1 className="text-5xl font-bold text-green-700 mb-6 text-center">Welcome to Go-Tribes! 🌍</h1>
-        <p className="text-xl text-gray-600 max-w-2xl text-center mb-8">
-          Create, save, and organize your dream adventures easily with Go-Tribes — your personalized travel planner.
-        </p>
-
-        <Link
-          href="/login"
-          className="mt-4 px-6 py-3 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition"
-        >
-          Get Started
-        </Link>
-      </main>
-    </>
+      {/* Footer */}
+      <footer className="text-center text-sm text-gray-400 py-6 border-t border-gray-700">
+        &copy; {new Date().getFullYear()} Go-Tribes. All rights reserved.
+      </footer>
+    </div>
   );
 }
