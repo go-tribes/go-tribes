@@ -1,10 +1,9 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import { auth } from "../../firebase";
-import { doc, getDoc, updateDoc } from "firebase/firestore";
-import { db } from "../../firebase";
 import { useRouter } from "next/navigation";
+import { auth, db } from "../../firebase";
+import { doc, getDoc, updateDoc } from "firebase/firestore";
 
 export default function EditProfilePage() {
   const router = useRouter();
@@ -22,11 +21,10 @@ export default function EditProfilePage() {
     const unsubscribe = auth.onAuthStateChanged(async (user) => {
       if (user) {
         setUid(user.uid);
-
-        const userRef = doc(db, "users", user.uid);
-        const userSnap = await getDoc(userRef);
-        if (userSnap.exists()) {
-          const data = userSnap.data();
+        const ref = doc(db, "users", user.uid);
+        const snap = await getDoc(ref);
+        if (snap.exists()) {
+          const data = snap.data();
           setDisplayName(data.displayName || "");
           setBio(data.bio || "");
           setProfileImage(data.profileImage || "");
@@ -55,7 +53,7 @@ export default function EditProfilePage() {
       setSuccess(true);
       setTimeout(() => setSuccess(false), 3000);
     } catch (err) {
-      console.error("Update failed:", err);
+      console.error("Failed to update profile:", err);
     } finally {
       setSaving(false);
     }
