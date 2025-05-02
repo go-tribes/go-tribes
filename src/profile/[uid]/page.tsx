@@ -44,14 +44,12 @@ export default function ProfilePage() {
 
     const loadProfile = async () => {
       try {
-        // Load user profile
         const userRef = doc(db, "users", uid as string);
         const userSnap = await getDoc(userRef);
         if (userSnap.exists()) {
           setProfile(userSnap.data() as UserProfile);
         }
 
-        // Load friends
         const friendsQuery = query(
           collection(db, "friends"),
           where("userId", "==", uid)
@@ -59,32 +57,30 @@ export default function ProfilePage() {
         const friendsSnap = await getDocs(friendsQuery);
         const friendProfiles: Friend[] = [];
 
-        for (const friendDoc of friendsSnap.docs) {
-          const friendId = friendDoc.data().friendId;
-          const userDoc = await getDoc(doc(db, "users", friendId));
-          if (userDoc.exists()) {
-            const data = userDoc.data();
+        for (const docSnap of friendsSnap.docs) {
+          const friendId = docSnap.data().friendId;
+          const friendDoc = await getDoc(doc(db, "users", friendId));
+          if (friendDoc.exists()) {
             friendProfiles.push({
               uid: friendId,
-              displayName: data.displayName,
-              profileImage: data.profileImage,
+              displayName: friendDoc.data().displayName,
+              profileImage: friendDoc.data().profileImage,
             });
           }
         }
 
-        setFriends(friendProfiles);
-
-        // Load trips
         const tripsQuery = query(
           collection(db, "trips"),
           where("userId", "==", uid),
           where("sharedPublicly", "==", true)
         );
         const tripSnap = await getDocs(tripsQuery);
-        const tripData = tripSnap.docs.map((doc) => doc.data() as Trip);
-        setTrips(tripData);
-      } catch (error) {
-        console.error("Failed to load profile:", error);
+        const userTrips = tripSnap.docs.map((doc) => doc.data() as Trip);
+
+        setFriends(friendProfiles);
+        setTrips(userTrips);
+      } catch (err) {
+        console.error("Failed to load profile:", err);
       } finally {
         setLoading(false);
       }
@@ -112,7 +108,7 @@ export default function ProfilePage() {
         </div>
       </div>
 
-      {/* Friends Section */}
+      {/* Friends */}
       <div>
         <h2 className="text-xl font-semibold text-gray-700 mb-2">Tribe Friends</h2>
         {friends.length === 0 ? (
