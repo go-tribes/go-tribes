@@ -1,41 +1,30 @@
 {
   "compilerOptions": {
-    "target": "ES2017",
-    "lib": [
-      "dom",
-      "dom.iterable",
-      "esnext"
-    ],
+    "target": "es5",
+    "lib": ["dom", "dom.iterable", "esnext"],
     "allowJs": true,
     "skipLibCheck": true,
     "strict": false,
+    "forceConsistentCasingInFileNames": true,
     "noEmit": true,
-    "incremental": true,
-    "module": "esnext",
     "esModuleInterop": true,
+    "module": "esnext",
     "moduleResolution": "node",
     "resolveJsonModule": true,
     "isolatedModules": true,
     "jsx": "preserve",
-    "plugins": [
-      {
-        "name": "next"
-      }
-    ],
-    "strictNullChecks": true
+    "incremental": true,
+    "baseUrl": "src",                     // ✅ enables @/ alias
+    "paths": {
+      "@/*": ["*"]                       // ✅ supports imports like @/firebase
+    }
   },
   "include": [
     "next-env.d.ts",
-    ".next/types/**/*.ts",
     "**/*.ts",
     "**/*.tsx"
   ],
   "exclude": [
     "node_modules"
   ]
-}
-{
-  "compilerOptions": {
-    "baseUrl": "src"
-  }
 }
