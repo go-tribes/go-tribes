@@ -1,9 +1,11 @@
 // src/firebase.ts
+
 import { initializeApp, getApps, getApp } from "firebase/app";
 import { getFirestore } from "firebase/firestore";
 import { getAuth } from "firebase/auth";
 import { getStorage } from "firebase/storage";
 
+// Firebase configuration (from .env or Vercel Environment Variables)
 const firebaseConfig = {
   apiKey: process.env.NEXT_PUBLIC_FIREBASE_API_KEY!,
   authDomain: process.env.NEXT_PUBLIC_FIREBASE_AUTH_DOMAIN!,
@@ -13,10 +15,13 @@ const firebaseConfig = {
   appId: process.env.NEXT_PUBLIC_FIREBASE_APP_ID!,
 };
 
+// Initialize Firebase only once (avoids duplicate app errors in dev)
 const app = getApps().length ? getApp() : initializeApp(firebaseConfig);
 
+// Firebase services
 const db = getFirestore(app);
 const auth = getAuth(app);
 const storage = getStorage(app);
 
+// Export for global use
 export { db, auth, storage };
