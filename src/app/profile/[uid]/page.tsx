@@ -2,8 +2,7 @@
 
 import { useEffect, useState, useRef } from "react";
 import type { User } from "firebase/auth";
-import { auth, db, storage } from "../../../firebase";
-
+import { auth, db, storage } from "@/firebase";
 import {
   doc, getDoc, updateDoc, collection, query, where, getDocs, addDoc, deleteDoc,
   arrayUnion, arrayRemove, setDoc
@@ -54,7 +53,9 @@ export default function ProfilePage() {
 
       const docRef = doc(db, "users", currentUser.uid);
       const docSnap = await getDoc(docRef);
-      if (docSnap.exists()) setProfile(docSnap.data());
+      if (docSnap.exists()) {
+        setProfile(docSnap.data() as typeof profile);
+      }
 
       const tripsRef = collection(db, "trips");
       const tripQuery = query(tripsRef, where("userId", "==", currentUser.uid));
@@ -76,5 +77,5 @@ export default function ProfilePage() {
     fetchUserData();
   }, [router]);
 
-  // ... rest unchanged
+  // ...rest of the code remains unchanged
 }
