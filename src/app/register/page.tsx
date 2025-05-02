@@ -6,7 +6,8 @@ import { signInWithEmailAndPassword, createUserWithEmailAndPassword } from "fire
 import { auth, db } from "../firebase";
 import { doc, setDoc } from "firebase/firestore";
 
-function AuthLayout({ isLogin }: { isLogin: boolean }) {
+function AuthLayout(props) {
+  const isLogin = props.isLogin;
   const router = useRouter();
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
@@ -15,7 +16,7 @@ function AuthLayout({ isLogin }: { isLogin: boolean }) {
   const [tribeName, setTribeName] = useState("");
   const [error, setError] = useState("");
 
-  const handleSubmit = async (e: React.FormEvent) => {
+  const handleSubmit = async (e) => {
     e.preventDefault();
     setError("");
     try {
@@ -34,7 +35,7 @@ function AuthLayout({ isLogin }: { isLogin: boolean }) {
         });
         router.push("/dashboard");
       }
-    } catch (err: any) {
+    } catch (err) {
       setError(err.message);
     }
   };
