@@ -24,30 +24,39 @@ export default function ProfilePage() {
     sharedTrips: 0,
     privacy: "public"
   });
-  type Notification = {
-  id: string;
-  [key: string]: any;
-};
 
-const [notifications, setNotifications] = useState<Notification[]>([]);
+  type Notification = {
+    id: string;
+    [key: string]: any;
+  };
+
+  const [notifications, setNotifications] = useState<Notification[]>([]);
   const [showMessages, setShowMessages] = useState(false);
   const [editMode, setEditMode] = useState(false);
-  type Trip = {
-  id: string;
-  [key: string]: any;
-};
 
-const [trips, setTrips] = useState<Trip[]>([]);
+  type Trip = {
+    id: string;
+    destination: string;
+    startDate: string;
+    endDate: string;
+    description: string;
+    imageUrls: string[];
+    privacy: string;
+    likes: string[];
+  };
+
+  const [trips, setTrips] = useState<Trip[]>([]);
   const [likes, setLikes] = useState<{ [key: string]: boolean }>({});
   const [bookmarks, setBookmarks] = useState<string[]>([]);
   const [comments, setComments] = useState<{ [key: string]: { user: string; text: string }[] }>({});
   const [tribeFriends, setTribeFriends] = useState<string[]>([]);
-  type Request = {
-  id: string;
-  [key: string]: any;
-};
 
-const [pendingRequests, setPendingRequests] = useState<Request[]>([]);
+  type Request = {
+    id: string;
+    displayName: string;
+  };
+
+  const [pendingRequests, setPendingRequests] = useState<Request[]>([]);
   const [searchEmail, setSearchEmail] = useState("");
   const fileInputRef = useRef(null);
 
@@ -70,12 +79,12 @@ const [pendingRequests, setPendingRequests] = useState<Request[]>([]);
       const docSnap = await getDoc(docRef);
       if (docSnap.exists()) {
         setProfile(docSnap.data() as typeof profile);
-}
+      }
 
       const tripsRef = collection(db, "trips");
       const tripQuery = query(tripsRef, where("userId", "==", currentUser.uid));
       const tripSnap = await getDocs(tripQuery);
-      setTrips(tripSnap.docs.map(doc => ({ id: doc.id, ...doc.data() })));
+      setTrips(tripSnap.docs.map(doc => ({ id: doc.id, ...doc.data() })) as Trip[]);
 
       const friendsRef = collection(db, "users", currentUser.uid, "friends");
       const friendSnap = await getDocs(friendsRef);
@@ -85,8 +94,7 @@ const [pendingRequests, setPendingRequests] = useState<Request[]>([]);
       const pendingSnap = await getDocs(pendingRef);
       setPendingRequests(pendingSnap.docs.map(doc => ({ id: doc.id, ...doc.data() })));
 
-      const notiRef = collection(db, "users", currentUser.uid, "requests");
-      const notiSnap = await getDocs(notiRef);
+      const notiSnap = await getDocs(pendingRef);
       setNotifications(notiSnap.docs.map(doc => ({ id: doc.id, ...doc.data() })));
     };
     fetchUserData();
@@ -167,117 +175,82 @@ const [pendingRequests, setPendingRequests] = useState<Request[]>([]);
   };
 
   return (
-    <> bg-yellow-50 px-4 py-8 text-sm text-gray-800">
+    <div className="min-h-screen bg-yellow-50 px-4 py-8 text-sm text-gray-800">
       <div className="max-w-3xl mx-auto bg-white p-6 rounded-xl border border-yellow-200 shadow-sm">
         <div className="flex justify-between items-center mb-4">
           <h2 className="text-yellow-700 font-semibold">My Profile</h2>
-          <button
-            onClick={() => setEditMode(!editMode)}
-            className="text-xs px-3 py-1 border border-yellow-500 text-yellow-600 rounded hover:bg-yellow-500 hover:text-white"
-          >{editMode ? "Cancel" : "Edit Profile"}</button>
+          <button onClick={() => setEditMode(!editMode)} className="text-xs text-yellow-600 hover:underline">
+            {editMode ? "Cancel" : "Edit Profile"}
+          </button>
         </div>
 
-        {editMode ? (
-          <div className="space-y-3 text-sm">
-            <input
-              type="text"
-              value={profile.displayName}
-              onChange={(e) => setProfile({ ...profile, displayName: e.target.value })}
-              placeholder="Name"
-              className="w-full px-3 py-1.5 border border-yellow-300 rounded"
-            />
-            <input
-              type="text"
-              value={profile.bio}
-              onChange={(e) => setProfile({ ...profile, bio: e.target.value })}
-              placeholder="Bio"
-              className="w-full px-3 py-1.5 border border-yellow-300 rounded"
-            />
-            <input
-              type="text"
-              value={profile.tribeName}
-              onChange={(e) => setProfile({ ...profile, tribeName: e.target.value })}
-              placeholder="Tribe Name"
-              className="w-full px-3 py-1.5 border border-yellow-300 rounded"
-            />
-            <button
-              onClick={handleSave}
-              className="px-4 py-1.5 bg-yellow-500 text-white rounded hover:bg-yellow-600"
-            >Save</button>
-          </div>
-        ) : (
-          <div className="mb-6 text-sm">
-            <p><strong>Name:</strong> {profile.displayName}</p>
-            <p><strong>Bio:</strong> {profile.bio || '-'}</p>
-            <p><strong>Tribe Name:</strong> {profile.tribeName || '-'}</p>
-            <p><strong>Tribe Rank:</strong> {getRank(profile.sharedTrips)}</p>
-          </div>
-        )}"min-h-screen bg-yellow-50 px-4 py-8 text-sm text-gray-800">
-      <div className="max-w-3xl mx-auto bg-white p-6 rounded-xl border border-yellow-200 shadow-sm">
-        {notifications.length > 0 && (
-          <div className="mb-4 p-3 bg-white border border-yellow-200 rounded shadow">
-            <h4 className="font-medium text-yellow-700 mb-2">Tribe Notifications</h4>
-            <ul className="space-y-1 text-xs">
-              {notifications.map(n => (
-                <li key={n.id}>{n.displayName} sent you a tribe request</li>
-              ))}
-            </ul>
-          </div>
-        )}
-
-        <button
-          onClick={() => setShowMessages(!showMessages)}
-          className="mb-6 text-xs px-3 py-1 border border-yellow-500 text-yellow-600 rounded hover:bg-yellow-500 hover:text-white"
-        >
-          {showMessages ? "Close Messages" : "Messages"}
-        </button>
-
-        {showMessages && (
-          <div className="mb-6 p-4 bg-white border border-yellow-100 rounded shadow text-xs text-gray-600">
-            <p>Messaging system coming soon...</p>
-          </div>
-        )}
-
-        <div className="mb-6 border-b pb-4">
-          <h3 className="text-sm font-medium text-yellow-700 mb-2">Add Tribe Friend</h3>
-          <div className="flex gap-2">
-            <input
-              type="email"
-              placeholder="Enter email"
-              value={searchEmail}
-              onChange={(e) => setSearchEmail(e.target.value)}
-              className="px-3 py-1 border border-yellow-300 rounded w-full"
-            />
-            <button
-              onClick={sendFriendRequest}
-              className="bg-yellow-500 text-white px-3 py-1 rounded hover:bg-yellow-600"
-            >Send</button>
+        <div className="flex gap-4 mb-4">
+          <div>
+            {profile.profileImage ? (
+              <Image src={profile.profileImage} alt="Profile" width={80} height={80} className="rounded-full object-cover" />
+            ) : (
+              <div className="w-20 h-20 bg-gray-300 rounded-full" />
+            )}
+            {editMode && (
+              <input type="file" onChange={handleImageChange} className="mt-2 text-xs" />
+            )}
           </div>
 
-          {pendingRequests.length > 0 && (
-            <div className="mt-4">
-              <h4 className="font-medium text-yellow-600 mb-2">Tribe Requests</h4>
-              {pendingRequests.map((req) => (
-                <div key={req.id} className="flex justify-between items-center mb-1">
-                  <span className="text-sm">{req.displayName}</span>
-                  <button
-                    onClick={() => acceptRequest(req.id, req.displayName)}
-                    className="text-xs text-green-700 border border-green-400 px-2 py-0.5 rounded hover:bg-green-100"
-                  >Accept</button>
-                </div>
-              ))}
+          <div>
+            {editMode ? (
+              <>
+                <input type="text" value={profile.displayName} onChange={(e) => setProfile({ ...profile, displayName: e.target.value })} className="block text-sm mb-1 border p-1 w-full" />
+                <input type="text" value={profile.bio} onChange={(e) => setProfile({ ...profile, bio: e.target.value })} className="block text-sm mb-1 border p-1 w-full" />
+                <input type="text" value={profile.tribeName} onChange={(e) => setProfile({ ...profile, tribeName: e.target.value })} className="block text-sm mb-1 border p-1 w-full" />
+                <button onClick={handleSave} className="text-xs text-white bg-yellow-500 px-2 py-1 rounded mt-2">Save</button>
+              </>
+            ) : (
+              <>
+                <p className="font-medium">{profile.displayName} ({getRank(profile.sharedTrips)})</p>
+                <p className="text-xs">{profile.bio}</p>
+                <p className="text-xs italic text-yellow-600">Tribe: {profile.tribeName}</p>
+              </>
+            )}
+          </div>
+        </div>
+
+        <div className="mt-6">
+          <h3 className="font-medium mb-2">My Trips</h3>
+          {trips.map(trip => (
+            <div key={trip.id} className="border p-2 rounded mb-2">
+              <p className="font-medium">{trip.destination} ({trip.startDate} to {trip.endDate})</p>
+              <p className="text-xs">{trip.description}</p>
+              <div className="flex gap-2 mt-1 text-xs">
+                <button onClick={() => toggleTripPrivacy(trip.id, trip.privacy)} className="text-yellow-600">{trip.privacy}</button>
+                <button onClick={() => deleteTrip(trip.id)} className="text-red-500">Delete</button>
+                <button onClick={() => toggleLike(trip.id)}>{likes[trip.id] ? "Unlike" : "Like"}</button>
+                <button onClick={() => toggleBookmark(trip.id)}>{bookmarks.includes(trip.id) ? "Unsave" : "Save"}</button>
+              </div>
             </div>
-          )}
+          ))}
+        </div>
 
-          {tribeFriends.length > 0 && (
-            <div className="mt-4">
-              <h4 className="font-medium text-yellow-600 mb-2">My Tribe</h4>
-              <ul className="list-disc pl-5 text-sm">
-                {tribeFriends.map((id) => (
-                  <li key={id}>{id}</li>
-                ))}
-              </ul>
+        <div className="mt-6">
+          <h3 className="font-medium mb-2">Friend Requests</h3>
+          {pendingRequests.map(req => (
+            <div key={req.id} className="flex justify-between items-center text-xs border-b py-1">
+              <span>{req.displayName}</span>
+              <button onClick={() => acceptRequest(req.id, req.displayName)} className="text-green-600">Accept</button>
             </div>
+          ))}
+        </div>
+
+        <div className="mt-6">
+          <h3 className="font-medium mb-2">Add Tribe Friend</h3>
+          <input type="email" value={searchEmail} onChange={(e) => setSearchEmail(e.target.value)} placeholder="Friend's email" className="text-sm border p-1 w-full mb-1" />
+          <button onClick={sendFriendRequest} className="text-sm bg-yellow-500 text-white px-2 py-1 rounded">Send Request</button>
+        </div>
+
+        <div className="mt-6">
+          <h3 className="font-medium mb-2">Messages</h3>
+          <button onClick={() => setShowMessages(!showMessages)} className="text-xs text-yellow-600 mb-2">{showMessages ? "Hide" : "Show"} Messages</button>
+          {showMessages && (
+            <div className="text-xs p-2 bg-gray-100 rounded">Messaging feature coming soon...</div>
           )}
         </div>
       </div>
