@@ -69,8 +69,7 @@ const [pendingRequests, setPendingRequests] = useState<Request[]>([]);
       const docRef = doc(db, "users", currentUser.uid);
       const docSnap = await getDoc(docRef);
       if (docSnap.exists()) {
-        setProfile(docSnap.data() as typeof profile)
-  );
+        setProfile(docSnap.data() as typeof profile);
 }
 
       const tripsRef = collection(db, "trips");
