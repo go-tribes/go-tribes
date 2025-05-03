@@ -25,32 +25,19 @@ export default function ProfilePage() {
     privacy: "public"
   });
 
-  type Notification = {
-    id: string;
-    [key: string]: any;
-  };
-
+  type Notification = { id: string; [key: string]: any };
   const [notifications, setNotifications] = useState<Notification[]>([]);
   const [showMessages, setShowMessages] = useState(false);
   const [editMode, setEditMode] = useState(false);
 
-  type Trip = {
-    id: string;
-    [key: string]: any;
-  };
-
+  type Trip = { id: string; [key: string]: any };
   const [trips, setTrips] = useState<Trip[]>([]);
   const [likes, setLikes] = useState<{ [key: string]: boolean }>({});
   const [bookmarks, setBookmarks] = useState<string[]>([]);
   const [comments, setComments] = useState<{ [key: string]: { user: string; text: string }[] }>({});
   const [tribeFriends, setTribeFriends] = useState<string[]>([]);
 
-  type Request = {
-    id: string;
-    displayName: string;
-    [key: string]: any;
-  };
-
+  type Request = { id: string; displayName: string };
   const [pendingRequests, setPendingRequests] = useState<Request[]>([]);
   const [searchEmail, setSearchEmail] = useState("");
   const fileInputRef = useRef(null);
@@ -87,7 +74,7 @@ export default function ProfilePage() {
 
       const pendingRef = collection(db, "users", currentUser.uid, "requests");
       const pendingSnap = await getDocs(pendingRef);
-      setPendingRequests(pendingSnap.docs.map(doc => ({ id: doc.id, ...(doc.data() as { displayName: string }) })));
+      setPendingRequests(pendingSnap.docs.map(doc => ({ id: doc.id, ...doc.data() } as Request)));
 
       const notiSnap = await getDocs(pendingRef);
       setNotifications(notiSnap.docs.map(doc => ({ id: doc.id, ...doc.data() })));
@@ -172,9 +159,77 @@ export default function ProfilePage() {
   return (
     <div className="min-h-screen bg-yellow-50 px-4 py-8 text-sm text-gray-800">
       <div className="max-w-3xl mx-auto bg-white p-6 rounded-xl border border-yellow-200 shadow-sm">
-        {/* Profile content here */}
         <h2 className="text-yellow-700 font-semibold mb-4">My Profile</h2>
-        {/* Add UI elements back here as needed */}
+
+        {editMode ? (
+          <div className="space-y-2">
+            <input className="w-full border p-1 rounded" value={profile.displayName} onChange={(e) => setProfile({ ...profile, displayName: e.target.value })} />
+            <input className="w-full border p-1 rounded" value={profile.bio} onChange={(e) => setProfile({ ...profile, bio: e.target.value })} />
+            <input className="w-full border p-1 rounded" value={profile.tribeName} onChange={(e) => setProfile({ ...profile, tribeName: e.target.value })} />
+            <button onClick={handleSave} className="bg-yellow-500 text-white px-3 py-1 rounded">Save</button>
+          </div>
+        ) : (
+          <div className="space-y-2">
+            <Image src={profile.profileImage || "/default.png"} alt="Profile" width={80} height={80} className="rounded-full" />
+            <p><strong>{profile.displayName}</strong></p>
+            <p>{profile.bio}</p>
+            <p>Tribe: {profile.tribeName || "-"}</p>
+            <p>Rank: {getRank(profile.sharedTrips)}</p>
+            <button onClick={() => setEditMode(true)} className="text-blue-600 text-xs underline">Edit Profile</button>
+            <input type="file" className="hidden" ref={fileInputRef} onChange={handleImageChange} />
+            <button onClick={() => fileInputRef.current?.click()} className="text-xs text-gray-600 underline">Change Image</button>
+          </div>
+        )}
+
+        <hr className="my-4" />
+
+        <div>
+          <h3 className="font-semibold mb-2">My Trips</h3>
+          {trips.map(trip => (
+            <div key={trip.id} className="border rounded p-2 mb-2">
+              <p className="font-medium">{trip.destination}</p>
+              <p>{trip.description}</p>
+              <p className="text-xs text-gray-500">Privacy: {trip.privacy}</p>
+              <div className="space-x-2 text-xs">
+                <button onClick={() => toggleTripPrivacy(trip.id, trip.privacy)}>Toggle Privacy</button>
+                <button onClick={() => deleteTrip(trip.id)} className="text-red-500">Delete</button>
+                <button onClick={() => toggleLike(trip.id)}>{likes[trip.id] ? "Unlike" : "Like"}</button>
+                <button onClick={() => toggleBookmark(trip.id)}>{bookmarks.includes(trip.id) ? "Unsave" : "Save"}</button>
+              </div>
+              <div className="mt-2">
+                <input className="w-full text-xs border p-1" placeholder="Add comment..." onKeyDown={(e) => { if (e.key === "Enter") handleComment(trip.id, e.currentTarget.value) }} />
+                {(comments[trip.id] || []).map((c, i) => <p key={i} className="text-xs">{c.user}: {c.text}</p>)}
+              </div>
+            </div>
+          ))}
+        </div>
+
+        <hr className="my-4" />
+
+        <div>
+          <h3 className="font-semibold mb-2">Add Tribe Friend</h3>
+          <input className="w-full border p-1 mb-2" placeholder="Enter email" value={searchEmail} onChange={(e) => setSearchEmail(e.target.value)} />
+          <button onClick={sendFriendRequest} className="bg-yellow-500 text-white px-3 py-1 rounded">Send Request</button>
+        </div>
+
+        {pendingRequests.length > 0 && (
+          <div className="mt-4">
+            <h3 className="font-semibold mb-2">Pending Requests</h3>
+            {pendingRequests.map(req => (
+              <div key={req.id} className="flex justify-between items-center border p-2 mb-1">
+                <p>{req.displayName}</p>
+                <button onClick={() => acceptRequest(req.id, req.displayName)} className="text-green-600 text-sm">Accept</button>
+              </div>
+            ))}
+          </div>
+        )}
+
+        {notifications.length > 0 && (
+          <div className="mt-4">
+            <h3 className="font-semibold mb-2">Notifications</h3>
+            {notifications.map(n => <p key={n.id} className="text-xs text-gray-600">{n.displayName} sent you a friend request</p>)}
+          </div>
+        )}
       </div>
     </div>
   );
