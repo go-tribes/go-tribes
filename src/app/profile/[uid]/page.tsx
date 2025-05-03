@@ -169,6 +169,51 @@ const [pendingRequests, setPendingRequests] = useState<Request[]>([]);
   return (
     <div className="min-h-screen bg-yellow-50 px-4 py-8 text-sm text-gray-800">
       <div className="max-w-3xl mx-auto bg-white p-6 rounded-xl border border-yellow-200 shadow-sm">
+        <div className="flex justify-between items-center mb-4">
+          <h2 className="text-yellow-700 font-semibold">My Profile</h2>
+          <button
+            onClick={() => setEditMode(!editMode)}
+            className="text-xs px-3 py-1 border border-yellow-500 text-yellow-600 rounded hover:bg-yellow-500 hover:text-white"
+          >{editMode ? "Cancel" : "Edit Profile"}</button>
+        </div>
+
+        {editMode ? (
+          <div className="space-y-3 text-sm">
+            <input
+              type="text"
+              value={profile.displayName}
+              onChange={(e) => setProfile({ ...profile, displayName: e.target.value })}
+              placeholder="Name"
+              className="w-full px-3 py-1.5 border border-yellow-300 rounded"
+            />
+            <input
+              type="text"
+              value={profile.bio}
+              onChange={(e) => setProfile({ ...profile, bio: e.target.value })}
+              placeholder="Bio"
+              className="w-full px-3 py-1.5 border border-yellow-300 rounded"
+            />
+            <input
+              type="text"
+              value={profile.tribeName}
+              onChange={(e) => setProfile({ ...profile, tribeName: e.target.value })}
+              placeholder="Tribe Name"
+              className="w-full px-3 py-1.5 border border-yellow-300 rounded"
+            />
+            <button
+              onClick={handleSave}
+              className="px-4 py-1.5 bg-yellow-500 text-white rounded hover:bg-yellow-600"
+            >Save</button>
+          </div>
+        ) : (
+          <div className="mb-6 text-sm">
+            <p><strong>Name:</strong> {profile.displayName}</p>
+            <p><strong>Bio:</strong> {profile.bio || '-'}</p>
+            <p><strong>Tribe Name:</strong> {profile.tribeName || '-'}</p>
+            <p><strong>Tribe Rank:</strong> {getRank(profile.sharedTrips)}</p>
+          </div>
+        )}"min-h-screen bg-yellow-50 px-4 py-8 text-sm text-gray-800">
+      <div className="max-w-3xl mx-auto bg-white p-6 rounded-xl border border-yellow-200 shadow-sm">
         {notifications.length > 0 && (
           <div className="mb-4 p-3 bg-white border border-yellow-200 rounded shadow">
             <h4 className="font-medium text-yellow-700 mb-2">Tribe Notifications</h4>
