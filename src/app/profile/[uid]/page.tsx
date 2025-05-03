@@ -27,7 +27,12 @@ export default function ProfilePage() {
   const [notifications, setNotifications] = useState([]);
   const [showMessages, setShowMessages] = useState(false);
   const [editMode, setEditMode] = useState(false);
-  const [trips, setTrips] = useState([]);
+  type Trip = {
+  id: string;
+  [key: string]: any;
+};
+
+const [trips, setTrips] = useState<Trip[]>([]);
   const [likes, setLikes] = useState({});
   const [bookmarks, setBookmarks] = useState([]);
   const [comments, setComments] = useState({});
