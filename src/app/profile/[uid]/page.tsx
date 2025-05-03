@@ -37,7 +37,12 @@ const [trips, setTrips] = useState<Trip[]>([]);
   const [bookmarks, setBookmarks] = useState([]);
   const [comments, setComments] = useState({});
   const [tribeFriends, setTribeFriends] = useState<string[]>([]);
-  const [pendingRequests, setPendingRequests] = useState([]);
+  type Request = {
+  id: string;
+  [key: string]: any;
+};
+
+const [pendingRequests, setPendingRequests] = useState<Request[]>([]);
   const [searchEmail, setSearchEmail] = useState("");
   const fileInputRef = useRef(null);
 
