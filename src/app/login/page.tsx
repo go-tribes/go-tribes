@@ -22,7 +22,8 @@ export default function LoginPage() {
         auth.signOut();
         return;
       }
-      router.push("/profile");
+      router.push(`/profile/${userCredential.user.uid}`);
+
     } catch (err: any) {
       setError(err.message);
     }

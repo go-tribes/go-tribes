@@ -34,7 +34,8 @@ export default function RegisterPage() {
       });
       await sendEmailVerification(userCredential.user);
       alert("Registration successful. Please verify your email before logging in.");
-      router.push("/profile");
+      router.push(`/profile/${userCredential.user.uid}`);
+
     } catch (err: any) {
       setError(err.message);
     }
