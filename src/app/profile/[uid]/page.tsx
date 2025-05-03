@@ -25,22 +25,40 @@ export default function ProfilePage() {
     privacy: "public"
   });
 
-  type Notification = { id: string; [key: string]: any };
+  type Notification = {
+    id: string;
+    [key: string]: any;
+  };
+
   const [notifications, setNotifications] = useState<Notification[]>([]);
   const [showMessages, setShowMessages] = useState(false);
   const [editMode, setEditMode] = useState(false);
 
-  type Trip = { id: string; [key: string]: any };
+  type Trip = {
+    id: string;
+    destination: string;
+    startDate: string;
+    endDate: string;
+    description: string;
+    imageUrls: string[];
+    privacy: string;
+  };
+
   const [trips, setTrips] = useState<Trip[]>([]);
   const [likes, setLikes] = useState<{ [key: string]: boolean }>({});
   const [bookmarks, setBookmarks] = useState<string[]>([]);
   const [comments, setComments] = useState<{ [key: string]: { user: string; text: string }[] }>({});
   const [tribeFriends, setTribeFriends] = useState<string[]>([]);
 
-  type Request = { id: string; displayName: string };
+  type Request = {
+    id: string;
+    displayName: string;
+    [key: string]: any;
+  };
+
   const [pendingRequests, setPendingRequests] = useState<Request[]>([]);
   const [searchEmail, setSearchEmail] = useState("");
-  const fileInputRef = useRef(null);
+  const fileInputRef = useRef<HTMLInputElement>(null);
 
   const getRank = (count: number) => {
     if (count >= 45) return "Trailblazer";
@@ -66,7 +84,7 @@ export default function ProfilePage() {
       const tripsRef = collection(db, "trips");
       const tripQuery = query(tripsRef, where("userId", "==", currentUser.uid));
       const tripSnap = await getDocs(tripQuery);
-      setTrips(tripSnap.docs.map(doc => ({ id: doc.id, ...doc.data() })));
+      setTrips(tripSnap.docs.map(doc => ({ id: doc.id, ...doc.data() } as Trip)));
 
       const friendsRef = collection(db, "users", currentUser.uid, "friends");
       const friendSnap = await getDocs(friendsRef);
@@ -163,73 +181,76 @@ export default function ProfilePage() {
 
         {editMode ? (
           <div className="space-y-2">
-            <input className="w-full border p-1 rounded" value={profile.displayName} onChange={(e) => setProfile({ ...profile, displayName: e.target.value })} />
-            <input className="w-full border p-1 rounded" value={profile.bio} onChange={(e) => setProfile({ ...profile, bio: e.target.value })} />
-            <input className="w-full border p-1 rounded" value={profile.tribeName} onChange={(e) => setProfile({ ...profile, tribeName: e.target.value })} />
+            <input type="text" value={profile.displayName} onChange={e => setProfile(p => ({ ...p, displayName: e.target.value }))} className="w-full border p-1" />
+            <input type="text" value={profile.bio} onChange={e => setProfile(p => ({ ...p, bio: e.target.value }))} className="w-full border p-1" />
+            <input type="text" value={profile.tribeName} onChange={e => setProfile(p => ({ ...p, tribeName: e.target.value }))} className="w-full border p-1" />
             <button onClick={handleSave} className="bg-yellow-500 text-white px-3 py-1 rounded">Save</button>
           </div>
         ) : (
-          <div className="space-y-2">
-            <Image src={profile.profileImage || "/default.png"} alt="Profile" width={80} height={80} className="rounded-full" />
-            <p><strong>{profile.displayName}</strong></p>
-            <p>{profile.bio}</p>
-            <p>Tribe: {profile.tribeName || "-"}</p>
-            <p>Rank: {getRank(profile.sharedTrips)}</p>
-            <button onClick={() => setEditMode(true)} className="text-blue-600 text-xs underline">Edit Profile</button>
-            <input type="file" className="hidden" ref={fileInputRef} onChange={handleImageChange} />
-            <button onClick={() => fileInputRef.current?.click()} className="text-xs text-gray-600 underline">Change Image</button>
+          <div className="flex items-center space-x-4">
+            {profile.profileImage && <Image src={profile.profileImage} alt="Profile" width={80} height={80} className="rounded-full" />}
+            <div>
+              <h3 className="text-lg font-bold">{profile.displayName}</h3>
+              <p>{profile.bio}</p>
+              <p className="text-xs text-gray-500">Tribe: {profile.tribeName} • Rank: {getRank(profile.sharedTrips)}</p>
+              <button onClick={() => setEditMode(true)} className="text-blue-600 text-xs underline">Edit Profile</button>
+            </div>
           </div>
         )}
 
-        <hr className="my-4" />
+        <hr className="my-6" />
 
         <div>
-          <h3 className="font-semibold mb-2">My Trips</h3>
+          <h4 className="font-semibold mb-2">My Trips</h4>
           {trips.map(trip => (
-            <div key={trip.id} className="border rounded p-2 mb-2">
-              <p className="font-medium">{trip.destination}</p>
-              <p>{trip.description}</p>
-              <p className="text-xs text-gray-500">Privacy: {trip.privacy}</p>
-              <div className="space-x-2 text-xs">
-                <button onClick={() => toggleTripPrivacy(trip.id, trip.privacy)}>Toggle Privacy</button>
-                <button onClick={() => deleteTrip(trip.id)} className="text-red-500">Delete</button>
-                <button onClick={() => toggleLike(trip.id)}>{likes[trip.id] ? "Unlike" : "Like"}</button>
-                <button onClick={() => toggleBookmark(trip.id)}>{bookmarks.includes(trip.id) ? "Unsave" : "Save"}</button>
+            <div key={trip.id} className="border p-3 rounded mb-3">
+              <div className="flex justify-between items-center">
+                <div>
+                  <h5 className="font-bold">{trip.destination}</h5>
+                  <p className="text-xs">{trip.startDate} to {trip.endDate}</p>
+                </div>
+                <div className="space-x-2">
+                  <button onClick={() => toggleTripPrivacy(trip.id, trip.privacy)} className="text-xs text-gray-600 underline">{trip.privacy}</button>
+                  <button onClick={() => deleteTrip(trip.id)} className="text-xs text-red-600 underline">Delete</button>
+                </div>
+              </div>
+              <p className="mt-2">{trip.description}</p>
+              <div className="mt-2 flex space-x-2">
+                <button onClick={() => toggleLike(trip.id)} className="text-xs">{likes[trip.id] ? "Unlike" : "Like"}</button>
+                <button onClick={() => toggleBookmark(trip.id)} className="text-xs">{bookmarks.includes(trip.id) ? "Unbookmark" : "Bookmark"}</button>
               </div>
               <div className="mt-2">
-                <input className="w-full text-xs border p-1" placeholder="Add comment..." onKeyDown={(e) => { if (e.key === "Enter") handleComment(trip.id, e.currentTarget.value) }} />
-                {(comments[trip.id] || []).map((c, i) => <p key={i} className="text-xs">{c.user}: {c.text}</p>)}
+                <input type="text" placeholder="Add comment" onKeyDown={e => {
+                  if (e.key === "Enter") handleComment(trip.id, (e.target as HTMLInputElement).value);
+                }} className="border px-2 py-1 w-full" />
+                <ul className="mt-1 space-y-1">
+                  {(comments[trip.id] || []).map((c, i) => <li key={i} className="text-xs">{c.user}: {c.text}</li>)}
+                </ul>
               </div>
             </div>
           ))}
         </div>
 
-        <hr className="my-4" />
+        <hr className="my-6" />
 
         <div>
-          <h3 className="font-semibold mb-2">Add Tribe Friend</h3>
-          <input className="w-full border p-1 mb-2" placeholder="Enter email" value={searchEmail} onChange={(e) => setSearchEmail(e.target.value)} />
-          <button onClick={sendFriendRequest} className="bg-yellow-500 text-white px-3 py-1 rounded">Send Request</button>
+          <h4 className="font-semibold mb-2">Add Tribe Friend</h4>
+          <div className="flex space-x-2">
+            <input type="email" value={searchEmail} onChange={e => setSearchEmail(e.target.value)} placeholder="Search by email" className="border px-2 py-1 flex-1" />
+            <button onClick={sendFriendRequest} className="bg-yellow-500 text-white px-3 py-1 rounded">Send</button>
+          </div>
         </div>
 
-        {pendingRequests.length > 0 && (
-          <div className="mt-4">
-            <h3 className="font-semibold mb-2">Pending Requests</h3>
-            {pendingRequests.map(req => (
-              <div key={req.id} className="flex justify-between items-center border p-2 mb-1">
-                <p>{req.displayName}</p>
-                <button onClick={() => acceptRequest(req.id, req.displayName)} className="text-green-600 text-sm">Accept</button>
-              </div>
-            ))}
-          </div>
-        )}
+        <div className="mt-4">
+          <h4 className="font-semibold mb-2">Pending Requests</h4>
+          {pendingRequests.map(req => (
+            <div key={req.id} className="flex justify-between items-center border px-3 py-2 rounded mb-2">
+              <span>{req.displayName}</span>
+              <button onClick={() => acceptRequest(req.id, req.displayName)} className="text-green-600 text-xs">Accept</button>
+            </div>
+          ))}
+        </div>
 
-        {notifications.length > 0 && (
-          <div className="mt-4">
-            <h3 className="font-semibold mb-2">Notifications</h3>
-            {notifications.map(n => <p key={n.id} className="text-xs text-gray-600">{n.displayName} sent you a friend request</p>)}
-          </div>
-        )}
       </div>
     </div>
   );
