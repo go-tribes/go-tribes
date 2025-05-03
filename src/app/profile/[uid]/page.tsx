@@ -24,7 +24,12 @@ export default function ProfilePage() {
     sharedTrips: 0,
     privacy: "public"
   });
-  const [notifications, setNotifications] = useState([]);
+  type Notification = {
+  id: string;
+  [key: string]: any;
+};
+
+const [notifications, setNotifications] = useState<Notification[]>([]);
   const [showMessages, setShowMessages] = useState(false);
   const [editMode, setEditMode] = useState(false);
   type Trip = {
@@ -33,9 +38,9 @@ export default function ProfilePage() {
 };
 
 const [trips, setTrips] = useState<Trip[]>([]);
-  const [likes, setLikes] = useState({});
-  const [bookmarks, setBookmarks] = useState([]);
-  const [comments, setComments] = useState({});
+  const [likes, setLikes] = useState<{ [key: string]: boolean }>({});
+  const [bookmarks, setBookmarks] = useState<string[]>([]);
+  const [comments, setComments] = useState<{ [key: string]: { user: string; text: string }[] }>({});
   const [tribeFriends, setTribeFriends] = useState<string[]>([]);
   type Request = {
   id: string;
