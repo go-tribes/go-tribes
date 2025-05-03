@@ -69,8 +69,9 @@ const [pendingRequests, setPendingRequests] = useState<Request[]>([]);
       const docRef = doc(db, "users", currentUser.uid);
       const docSnap = await getDoc(docRef);
       if (docSnap.exists()) {
-        setProfile(docSnap.data() as typeof profile);
-      }
+        setProfile(docSnap.data() as typeof profile</>
+  );
+}
 
       const tripsRef = collection(db, "trips");
       const tripQuery = query(tripsRef, where("userId", "==", currentUser.uid));
@@ -167,7 +168,7 @@ const [pendingRequests, setPendingRequests] = useState<Request[]>([]);
   };
 
   return (
-    <div className="min-h-screen bg-yellow-50 px-4 py-8 text-sm text-gray-800">
+    <> bg-yellow-50 px-4 py-8 text-sm text-gray-800">
       <div className="max-w-3xl mx-auto bg-white p-6 rounded-xl border border-yellow-200 shadow-sm">
         <div className="flex justify-between items-center mb-4">
           <h2 className="text-yellow-700 font-semibold">My Profile</h2>
