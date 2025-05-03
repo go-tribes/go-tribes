@@ -2,8 +2,11 @@
 
 import { useState } from "react";
 import { useRouter } from "next/navigation";
-import { createUserWithEmailAndPassword } from "firebase/auth";
-import { auth, db } from "../../firebase";
+import {
+  createUserWithEmailAndPassword,
+  sendEmailVerification
+} from "firebase/auth";
+import { auth, db } from "@/firebase";
 import { doc, setDoc } from "firebase/firestore";
 
 export default function RegisterPage() {
@@ -29,7 +32,7 @@ export default function RegisterPage() {
         sharedTrips: 0,
         emailVerified: false
       });
-      await userCredential.user.sendEmailVerification();
+      await sendEmailVerification(userCredential.user);
       alert("Registration successful. Please verify your email before logging in.");
       router.push("/profile");
     } catch (err: any) {
@@ -45,17 +48,56 @@ export default function RegisterPage() {
         </h1>
         {error && <p className="text-red-500 text-xs mb-3 text-center">{error}</p>}
         <form onSubmit={handleRegister} className="space-y-3 text-sm">
-          <input type="text" placeholder="Full Name" value={name} onChange={(e) => setName(e.target.value)} required className="w-full px-3 py-1.5 border border-yellow-300 rounded focus:outline-none focus:ring-1 focus:ring-yellow-500" />
-          <input type="text" placeholder="Short Bio (optional)" value={bio} onChange={(e) => setBio(e.target.value)} className="w-full px-3 py-1.5 border border-yellow-300 rounded focus:outline-none focus:ring-1 focus:ring-yellow-500" />
-          <input type="text" placeholder="Your Tribe Name (optional)" value={tribeName} onChange={(e) => setTribeName(e.target.value)} className="w-full px-3 py-1.5 border border-yellow-300 rounded focus:outline-none focus:ring-1 focus:ring-yellow-500" />
-          <input type="email" placeholder="Email" value={email} onChange={(e) => setEmail(e.target.value)} required className="w-full px-3 py-1.5 border border-yellow-300 rounded focus:outline-none focus:ring-1 focus:ring-yellow-500" />
-          <input type="password" placeholder="Password" value={password} onChange={(e) => setPassword(e.target.value)} required className="w-full px-3 py-1.5 border border-yellow-300 rounded focus:outline-none focus:ring-1 focus:ring-yellow-500" />
-          <button type="submit" className="w-full py-1.5 bg-yellow-500 text-white font-medium rounded hover:bg-yellow-600 transition text-sm">
+          <input
+            type="text"
+            placeholder="Full Name"
+            value={name}
+            onChange={(e) => setName(e.target.value)}
+            required
+            className="w-full px-3 py-1.5 border border-yellow-300 rounded focus:outline-none focus:ring-1 focus:ring-yellow-500"
+          />
+          <input
+            type="text"
+            placeholder="Short Bio (optional)"
+            value={bio}
+            onChange={(e) => setBio(e.target.value)}
+            className="w-full px-3 py-1.5 border border-yellow-300 rounded focus:outline-none focus:ring-1 focus:ring-yellow-500"
+          />
+          <input
+            type="text"
+            placeholder="Your Tribe Name (optional)"
+            value={tribeName}
+            onChange={(e) => setTribeName(e.target.value)}
+            className="w-full px-3 py-1.5 border border-yellow-300 rounded focus:outline-none focus:ring-1 focus:ring-yellow-500"
+          />
+          <input
+            type="email"
+            placeholder="Email"
+            value={email}
+            onChange={(e) => setEmail(e.target.value)}
+            required
+            className="w-full px-3 py-1.5 border border-yellow-300 rounded focus:outline-none focus:ring-1 focus:ring-yellow-500"
+          />
+          <input
+            type="password"
+            placeholder="Password"
+            value={password}
+            onChange={(e) => setPassword(e.target.value)}
+            required
+            className="w-full px-3 py-1.5 border border-yellow-300 rounded focus:outline-none focus:ring-1 focus:ring-yellow-500"
+          />
+          <button
+            type="submit"
+            className="w-full py-1.5 bg-yellow-500 text-white font-medium rounded hover:bg-yellow-600 transition text-sm"
+          >
             Register
           </button>
         </form>
         <div className="mt-3 text-center text-xs text-gray-500">
-          Already have an account? <a href="/login" className="text-yellow-600 font-medium hover:underline">Login</a>
+          Already have an account?{" "}
+          <a href="/login" className="text-yellow-600 font-medium hover:underline">
+            Login
+          </a>
         </div>
       </div>
     </div>
