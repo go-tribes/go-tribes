@@ -4,7 +4,6 @@ import { doc, getDoc, setDoc } from "firebase/firestore";
 import { ref, uploadBytes, getDownloadURL } from "firebase/storage";
 import { auth, db, storage } from "../../firebase"; // ← two dots if firebase is in /src
 
-
 export default function Profile() {
   const router = useRouter();
   const [loading, setLoading] = useState(true);
@@ -22,7 +21,8 @@ export default function Profile() {
     profileImage: ""
   });
 
-  const fileInputRef = useRef(null);
+  // ----------- TYPING ADDED -----------
+  const fileInputRef = useRef<HTMLInputElement | null>(null);
 
   const fetchProfile = async () => {
     const user = auth.currentUser;
@@ -56,12 +56,18 @@ export default function Profile() {
     return () => unsubscribe();
   }, [router]);
 
-  const handleChange = (e) => {
+  // ----------- TYPING ADDED -----------
+  const handleChange = (
+    e: React.ChangeEvent<
+      HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement
+    >
+  ) => {
     const { name, value } = e.target;
     setProfile((prev) => ({ ...prev, [name]: value }));
   };
 
-  const handlePhotoUpload = async (file) => {
+  // ----------- TYPING ADDED -----------
+  const handlePhotoUpload = async (file: File) => {
     if (!file || !auth.currentUser) return;
     const fileRef = ref(storage, `profiles/${auth.currentUser.uid}.jpg`);
     await uploadBytes(fileRef, file);
@@ -94,7 +100,11 @@ export default function Profile() {
         type="file"
         accept="image/*"
         ref={fileInputRef}
-        onChange={(e) => handlePhotoUpload(e.target.files[0])}
+        onChange={(e) => {
+          if (e.target.files && e.target.files[0]) {
+            handlePhotoUpload(e.target.files[0]);
+          }
+        }}
         className="mb-4"
       />
 
