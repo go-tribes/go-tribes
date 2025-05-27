@@ -751,7 +751,6 @@ export default function HomeFeed() {
                         src={galleryMedia[galleryIndex]}
                         controls
                         className="w-full max-h-96 rounded object-contain"
-                        loading="lazy"
                       />
                     ) : (
                       <img
