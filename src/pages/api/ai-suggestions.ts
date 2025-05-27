@@ -1,10 +1,9 @@
 import type { NextApiRequest, NextApiResponse } from 'next';
-import { Configuration, OpenAIApi } from 'openai';
+import OpenAI from 'openai';
 
-const config = new Configuration({
+const openai = new OpenAI({
   apiKey: process.env.OPENAI_API_KEY,
 });
-const openai = new OpenAIApi(config);
 
 export default async function handler(req: NextApiRequest, res: NextApiResponse) {
   const { destination, profileIntro } = req.body;
@@ -12,17 +11,19 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
   try {
     const prompt = `Suggest 3 interesting travel activities in ${destination} for someone who wrote: "${profileIntro}". Keep it short and simple.`;
 
-    const response = await openai.createChatCompletion({
+    const response = await openai.chat.completions.create({
       model: "gpt-3.5-turbo",
       messages: [{ role: "user", content: prompt }],
       temperature: 0.7,
     });
 
-    const suggestions = response.data.choices[0].message?.content || "";
+    // Note: With SDK v4, response structure is a bit different:
+    const suggestions = response.choices[0]?.message?.content || "";
     res.status(200).json({ suggestions });
 
   } catch (error: any) {
-    console.error("OpenAI Error:", error.message);
+    // OpenAI errors might be in error.message or error.error.message
+    console.error("OpenAI Error:", error?.message || error?.error?.message);
     res.status(500).json({ error: "AI failed" });
   }
 }
