@@ -608,7 +608,7 @@ export default function HomeFeed() {
                               <video
                                 src={currentMediaUrl}
                                 className="max-h-72 rounded-lg object-contain"
-                                loading="lazy"
+                                // REMOVED loading="lazy" as it's invalid for <video>
                                 muted
                                 controls
                                 onClick={() =>
@@ -750,7 +750,7 @@ export default function HomeFeed() {
                         src={galleryMedia[galleryIndex]}
                         controls
                         className="w-full max-h-96 rounded object-contain"
-                        loading="lazy"
+                        // REMOVED loading="lazy" as it's invalid for <video>
                       />
                     ) : (
                       <img
