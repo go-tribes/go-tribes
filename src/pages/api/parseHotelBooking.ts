@@ -35,7 +35,8 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
   form.uploadDir = path.join(process.cwd(), "tmp");
   form.keepExtensions = true;
 
-  form.parse(req, async (err: any, fields, files) => {
+  form.parse(req, async (err: any, fields: any, files: any) => {
+
 
     if (err) {
       console.error('Form parse error:', err);
