@@ -35,7 +35,8 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
   form.uploadDir = path.join(process.cwd(), "tmp");
   form.keepExtensions = true;
 
-  form.parse(req, async (err, fields, files) => {
+  form.parse(req, async (err: any, fields, files) => {
+
     if (err) {
       console.error('Form parse error:', err);
       return res.status(500).json({ error: "Upload failed", detail: err.toString() });
